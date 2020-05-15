@@ -1,4 +1,4 @@
-package com.swayam.ocr.core.impl;
+package com.swayam.ocr.porua.tesseract.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -12,8 +12,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.swayam.ocr.core.model.Language;
-import com.swayam.ocr.core.model.RawOcrWord;
+import com.swayam.ocr.porua.tesseract.model.Language;
+import com.swayam.ocr.porua.tesseract.model.RawOcrWord;
 
 class TesseractOcrWordAnalyserIntegrationTest {
 
@@ -23,7 +23,7 @@ class TesseractOcrWordAnalyserIntegrationTest {
 	List<String> expected = Files.readAllLines(Paths.get(TesseractOcrWordAnalyserIntegrationTest.class.getResource("/box-files/eng.Arial_Unicode_MS.exp0.png.box").toURI()));
 
 	TesseractOcrWordAnalyser testClass =
-		new TesseractOcrWordAnalyser(Paths.get(TesseractOcrWordAnalyserIntegrationTest.class.getResource("/box-files/eng.Arial_Unicode_MS.exp0.png").toURI()), Language.ENGLISH);
+		new TesseractOcrWordAnalyser(Paths.get(TesseractOcrWordAnalyserIntegrationTest.class.getResource("/box-files/eng.Arial_Unicode_MS.exp0.png").toURI()), Language.eng);
 
 	Collection<RawOcrWord> rawOcrWords = testClass.getDetectedText();
 

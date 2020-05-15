@@ -1,4 +1,4 @@
-package com.swayam.ocr.core.model;
+package com.swayam.ocr.porua.tesseract.model;
 
 import java.io.Serializable;
 
