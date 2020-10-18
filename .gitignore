@@ -1,0 +1,16 @@
+**logs
+*.log
+.project
+.classpath
+*~
+**target
+**bin
+**.settings
+output.txt
+/bangla-ocr/nbproject/private/
+/bangla-ocr/build/
+/bangla-ocr/dist/
+nbactions.xml
+vendor
+composer.lock
+

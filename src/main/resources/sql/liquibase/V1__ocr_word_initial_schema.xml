@@ -28,10 +28,10 @@
 			<column name="word_sequence_id" type="INT">
 				<constraints nullable="false" />
 			</column>
-			<column name="raw_text" type="CLOB">
+			<column name="raw_text" type="CLOB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci">
 				<constraints nullable="false" />
 			</column>
-			<column name="corrected_text" type="CLOB" />
+			<column name="corrected_text" type="CLOB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci" />
 			<column name="x1" type="INT">
 				<constraints nullable="false" />
 			</column>
