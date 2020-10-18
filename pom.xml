@@ -81,8 +81,8 @@
 					<driver>org.hsqldb.jdbc.JDBCDriver</driver>
 					<outputChangeLogFile>liquibase-outputChangeLog.xml</outputChangeLogFile>
 				</configuration>
-			</plugin> 			
-			
+			</plugin>
+
 		</plugins>
 	</build>
 
@@ -116,6 +116,12 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -176,13 +182,6 @@
 					</plugin>
 				</plugins>
 			</build>
-			<dependencies>
-				<dependency>
-					<groupId>mysql</groupId>
-					<artifactId>mysql-connector-java</artifactId>
-					<version>8.0.16</version>
-				</dependency>
-			</dependencies>
 		</profile>
 	</profiles>
 
