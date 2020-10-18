@@ -48,7 +48,7 @@
 				<constraints nullable="false" />
 			</column>
 			<column name="line_number" type="INT" />
-			<column defaultValueBoolean="false" name="IGNORED"
+			<column defaultValueBoolean="false" name="ignored"
 				type="BOOLEAN">
 				<constraints nullable="false" />
 			</column>
