@@ -1,6 +1,6 @@
 package com.swayam.ocr.porua.tesseract.rest.dto;
 
-import com.swayam.ocr.porua.tesseract.OcrWordId;
+import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 
 public interface OcrCorrection {
 

@@ -13,9 +13,9 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
-import com.swayam.ocr.porua.tesseract.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.Language;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
+import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;

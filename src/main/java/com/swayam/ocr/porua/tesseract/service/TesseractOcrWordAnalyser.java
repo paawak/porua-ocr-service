@@ -32,9 +32,9 @@ import org.bytedeco.tesseract.global.tesseract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.swayam.ocr.porua.tesseract.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.Language;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
+import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 
 import lombok.Value;
 import reactor.core.publisher.FluxSink;
