@@ -8,11 +8,11 @@ This application is written in Java/Spring Boot. JavaCPP-Presets(https://github.
 
 # How build docker image
 
-mvn clean package
+mvn clean package -P docker
 
 # How upload docker image to docker hub
 
-mvn clean install
+mvn clean install -P docker
 
 # How to run
 
