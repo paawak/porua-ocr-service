@@ -28,7 +28,7 @@ class TesseractOcrWordAnalyserIntegrationTest {
 	List<String> expected = Files.readAllLines(Paths.get(TesseractOcrWordAnalyserIntegrationTest.class.getResource("/box-files/eng.Arial_Unicode_MS.exp0.png.box").toURI()));
 
 	TesseractOcrWordAnalyser testClass = new TesseractOcrWordAnalyser(Paths.get(TesseractOcrWordAnalyserIntegrationTest.class.getResource("/box-files/eng.Arial_Unicode_MS.exp0.png").toURI()),
-		Language.eng, System.getProperty("user.dir") + "/tessdata_best-4.0.0");
+		Language.eng, TesseractOcrWordAnalyserIntegrationTest.class.getResource("/tessdata_best-4.0.0").getFile());
 
 	Collection<OcrWord> rawOcrWords = Flux.create((FluxSink<OcrWord> fluxSink) -> {
 	    testClass.extractWordsFromImage(fluxSink, (wordSequenceId) -> new OcrWordId(1, 1, wordSequenceId));
