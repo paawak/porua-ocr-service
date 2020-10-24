@@ -63,29 +63,14 @@ The REST API is:
 
 The below GET request does the trick:
 <http://localhost:8080/train/word/image?wordId=3&imagePath=/kaaj/source/porua/training/box-making-tool/src/test/resources/images/bangla-mahabharat-1-page_2.jpg>	
-
-## Retrieving corrected text from Hsql DB
-
-Start the *sqltool.jar* bundled with the Hsql distribution
-    
-    java -jar sqltool.jar 
-    
-Then connect to the Hsql DB using
-    
-    \j SA jdbc:hsqldb:file:/kaaj/source/porua/training/box-making-tool/hsql-db/ocrdb;shutdown=true
-    
-Select the corrected words:    
-
-    select id, corrected_text from ocr_word where corrected_text IS NOT NULL;
-    
-Exporting the corrected words to a CSV file:   
-    
-    * *DSV_TARGET_FILE=correctedtexts.csv
-    \xq select id, corrected_text from ocr_word where corrected_text IS NOT NULL
     
 # DB Migration Utils with Liquibase
 
 Reference: <https://docs.liquibase.com/tools-integrations/maven/commands/home.html>
+
+## Manually clear all existing checksums
+
+    mvn -P mysql liquibase:clearCheckSums
 
 ## Generate Mysql SQL Schema from existing DB
 
@@ -96,6 +81,12 @@ In the *pom.xml* change the *outputChangeLogFile* property in the format *schema
 ## Applying liquibase changelog to MySQL DB
 
     mvn -P mysql liquibase:update    
+
+## Exporting data from existing MySQL DB
+
+    mvn -P mysql liquibase:generateChangeLog -Dliquibase.diffTypes=data
+    
+A file called *schema.mysql.sql* is generated with all inserts     
 				
 # Sources
 		
