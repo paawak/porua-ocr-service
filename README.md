@@ -84,7 +84,13 @@ In the *pom.xml* change the *outputChangeLogFile* property in the format *schema
 
 ## Exporting data from existing MySQL DB
 
-    mvn -P mysql liquibase:generateChangeLog -Dliquibase.diffTypes=data
+Export data from tables *book* and *page_image*
+
+    mvn -P mysql liquibase:generateChangeLog -Dliquibase.diffTypes=data -Dliquibase.diffIncludeObjects="table:book,page_image" 
+
+Export data from table *ocr_word*
+
+    mvn -P mysql liquibase:generateChangeLog -Dliquibase.diffTypes=data -Dliquibase.diffIncludeObjects="table:ocr_word" 
     
 A file called *schema.mysql.sql* is generated with all inserts     
 				
