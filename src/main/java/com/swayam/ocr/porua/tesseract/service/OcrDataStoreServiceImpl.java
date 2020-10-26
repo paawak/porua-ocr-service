@@ -7,9 +7,9 @@ import javax.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
 
-import com.swayam.ocr.porua.tesseract.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
+import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
 import com.swayam.ocr.porua.tesseract.repo.BookRepository;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepository;

@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
-import com.swayam.ocr.porua.tesseract.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
+import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 
 public interface OcrWordRepository extends CrudRepository<OcrWord, OcrWordId> {
 

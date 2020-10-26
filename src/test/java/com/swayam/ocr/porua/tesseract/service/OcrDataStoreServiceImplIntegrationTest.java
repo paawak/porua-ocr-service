@@ -19,10 +19,10 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.swayam.ocr.porua.tesseract.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.Language;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
+import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
 
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
