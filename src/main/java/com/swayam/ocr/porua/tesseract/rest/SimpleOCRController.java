@@ -22,23 +22,23 @@ import com.swayam.ocr.porua.tesseract.service.TesseractInvokerService;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/rest")
-public class OCRFrontController {
+@RequestMapping("/ocr/simple")
+public class SimpleOCRController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OCRFrontController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleOCRController.class);
 
     private static final List<MediaType> SUPPORTED_CONTENT_TYPES = Arrays.asList(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG, MediaType.APPLICATION_OCTET_STREAM, new MediaType("image", "tiff"));
 
     private final TesseractInvokerService tesseractInvokerService;
     private final FileSystemUtil fileSystemUtil;
 
-    public OCRFrontController(TesseractInvokerService tesseractInvokerService, FileSystemUtil fileSystemUtil) {
+    public SimpleOCRController(TesseractInvokerService tesseractInvokerService, FileSystemUtil fileSystemUtil) {
 	this.tesseractInvokerService = tesseractInvokerService;
 	this.fileSystemUtil = fileSystemUtil;
 
     }
 
-    @PostMapping(value = "/ocr", produces = MediaType.TEXT_PLAIN_VALUE)
+    @PostMapping(produces = MediaType.TEXT_PLAIN_VALUE)
     public Mono<ResponseEntity<String>> uploadImageFile(@RequestPart("language") String languageAsString, @RequestPart("image") FilePart image) throws IOException {
 	LOGGER.info("languageAsString: {}", languageAsString);
 
