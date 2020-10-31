@@ -3,7 +3,9 @@ package com.swayam.ocr.porua.tesseract.service;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import javax.imageio.ImageIO;
@@ -23,9 +25,6 @@ import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
 
 @Service
 public class ImageProcessor {
@@ -81,22 +80,20 @@ public class ImageProcessor {
 
     }
 
-    public Flux<OcrWord> submitPageForAnalysis(final long bookId, final int pageNumber, final String imageFileName, final Path savedImagePath) {
+    public List<OcrWord> submitPageForAnalysis(final long bookId, final int pageNumber, final String imageFileName, final Path savedImagePath) {
 	Book book = ocrDataStoreService.getBook(bookId);
 	return submitPageForAnalysis(book, pageNumber, imageFileName, savedImagePath);
     }
 
-    private Flux<OcrWord> submitPageForAnalysis(final Book book, final int pageNumber, final String imageFileName, final Path savedImagePath) {
+    private List<OcrWord> submitPageForAnalysis(final Book book, final int pageNumber, final String imageFileName, final Path savedImagePath) {
 	PageImage newPageImage = new PageImage();
 	newPageImage.setName(imageFileName);
 	newPageImage.setPageNumber(pageNumber);
 	newPageImage.setBook(book);
 	long imageFileId = ocrDataStoreService.addPageImage(newPageImage).getId();
 
-	return Flux.create((FluxSink<OcrWord> fluxSink) -> {
-	    new TesseractOcrWordAnalyser(savedImagePath, book.getLanguage(), tessDataDirectory).extractWordsFromImage(fluxSink,
-		    (wordSequenceId) -> new OcrWordId(book.getId(), imageFileId, wordSequenceId));
-	}).map(rawText -> ocrDataStoreService.addOcrWord(rawText));
+	return new TesseractOcrWordAnalyser(savedImagePath, book.getLanguage(), tessDataDirectory).extractWordsFromImage((wordSequenceId) -> new OcrWordId(book.getId(), imageFileId, wordSequenceId))
+		.stream().map(rawText -> ocrDataStoreService.addOcrWord(rawText)).collect(Collectors.toUnmodifiableList());
 
     }
 
@@ -106,7 +103,7 @@ public class ImageProcessor {
 	} catch (IOException e) {
 	    throw new RuntimeException(e);
 	}
-	submitPageForAnalysis(book, pageNumber, imageFileName, imageLocation).blockLast();
+	submitPageForAnalysis(book, pageNumber, imageFileName, imageLocation);
     }
 
 }

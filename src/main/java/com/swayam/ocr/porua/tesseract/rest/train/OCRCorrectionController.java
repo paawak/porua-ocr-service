@@ -1,6 +1,7 @@
 package com.swayam.ocr.porua.tesseract.rest.train;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrectionDto;
 import com.swayam.ocr.porua.tesseract.service.OcrDataStoreService;
-
-import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("/ocr/train/correction")
@@ -40,14 +39,14 @@ public class OCRCorrectionController {
     }
 
     @PostMapping(value = "/word", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Flux<Integer> applyCorrectionToOcrWords(@RequestBody final List<OcrCorrectionDto> ocrWordsForCorrection) {
-	return Flux.fromIterable(ocrWordsForCorrection)
-		.map(ocrWordForCorrection -> ocrDataStoreService.updateCorrectTextInOcrWord(ocrWordForCorrection.getOcrWordId(), ocrWordForCorrection.getCorrectedText()));
+    public List<Integer> applyCorrectionToOcrWords(@RequestBody final List<OcrCorrectionDto> ocrWordsForCorrection) {
+	return ocrWordsForCorrection.stream().map(ocrWordForCorrection -> ocrDataStoreService.updateCorrectTextInOcrWord(ocrWordForCorrection.getOcrWordId(), ocrWordForCorrection.getCorrectedText()))
+		.collect(Collectors.toUnmodifiableList());
     }
 
     @PostMapping(value = "/word/ignore", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public Flux<Integer> markOcrWordAsIgnored(@RequestBody final List<OcrWordId> wordsToIgnore) {
-	return Flux.fromIterable(wordsToIgnore).map(ocrDataStoreService::markWordAsIgnored);
+    public List<Integer> markOcrWordAsIgnored(@RequestBody final List<OcrWordId> wordsToIgnore) {
+	return wordsToIgnore.stream().map(ocrDataStoreService::markWordAsIgnored).collect(Collectors.toUnmodifiableList());
     }
 
 }

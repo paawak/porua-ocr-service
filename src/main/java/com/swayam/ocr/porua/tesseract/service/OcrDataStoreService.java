@@ -14,7 +14,7 @@ public interface OcrDataStoreService {
 
     Book getBook(long bookId);
 
-    Iterable<Book> getBooks();
+    List<Book> getBooks();
 
     PageImage addPageImage(PageImage pageImage);
 

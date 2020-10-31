@@ -12,8 +12,8 @@ logging:
 spring:
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 20MB
+      max-file-size: 500MB
+      max-request-size: 500MB
   datasource:
     url: jdbc:mysql://localhost:3306/porua?useSSL=false
     username: root
@@ -29,6 +29,3 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:/sql/liquibase/master-change-log.xml
-
-springdoc:
-  swagger-ui.path: /swagger-ui.html

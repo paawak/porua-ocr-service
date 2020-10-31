@@ -9,16 +9,12 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
 import com.swayam.ocr.porua.tesseract.model.Language;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
 
 class TesseractOcrWordAnalyserIntegrationTest {
 
@@ -30,9 +26,7 @@ class TesseractOcrWordAnalyserIntegrationTest {
 	TesseractOcrWordAnalyser testClass = new TesseractOcrWordAnalyser(Paths.get(TesseractOcrWordAnalyserIntegrationTest.class.getResource("/box-files/eng.Arial_Unicode_MS.exp0.png").toURI()),
 		Language.eng, TesseractOcrWordAnalyserIntegrationTest.class.getResource("/tessdata_best-4.0.0").getFile());
 
-	Collection<OcrWord> rawOcrWords = Flux.create((FluxSink<OcrWord> fluxSink) -> {
-	    testClass.extractWordsFromImage(fluxSink, (wordSequenceId) -> new OcrWordId(1, 1, wordSequenceId));
-	}).toStream().collect(Collectors.toList());
+	Collection<OcrWord> rawOcrWords = testClass.extractWordsFromImage((wordSequenceId) -> new OcrWordId(1, 1, wordSequenceId));
 
 	// when
 	List<String> result = testClass.getBoxStrings(Collections.emptyMap(), rawOcrWords);
