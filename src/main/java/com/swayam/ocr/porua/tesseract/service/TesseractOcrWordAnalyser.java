@@ -9,6 +9,7 @@ import java.awt.Rectangle;
 import java.nio.IntBuffer;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +38,6 @@ import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 
 import lombok.Value;
-import reactor.core.publisher.FluxSink;
 
 public class TesseractOcrWordAnalyser {
 
@@ -53,10 +53,12 @@ public class TesseractOcrWordAnalyser {
 	this.tessDataDirectory = tessDataDirectory;
     }
 
-    public void extractWordsFromImage(FluxSink<OcrWord> ocrWordSink, Function<Integer, OcrWordId> ocrWordIdGenerator) {
+    public List<OcrWord> extractWordsFromImage(Function<Integer, OcrWordId> ocrWordIdGenerator) {
 	LOGGER.info("Image file to analyse with Tesseract OCR: {}", imagePath);
 
 	LOGGER.info("Analyzing image file for words with language {} and TESSDATA {}", language.name(), tessDataDirectory);
+
+	List<OcrWord> ocrWords = new ArrayList<>();
 
 	try (TessBaseAPI api = new TessBaseAPI();) {
 	    int returnCode = api.Init(tessDataDirectory, language.name());
@@ -103,7 +105,7 @@ public class TesseractOcrWordAnalyser {
 
 		    LOGGER.info("ocrWord: {}", ocrWord);
 
-		    ocrWordSink.next(ocrWord);
+		    ocrWords.add(ocrWord);
 
 		    x1.deallocate();
 		    y1.deallocate();
@@ -118,9 +120,9 @@ public class TesseractOcrWordAnalyser {
 	    api.End();
 	    api.deallocate();
 	    pixDestroy(image);
-	    ocrWordSink.complete();
 	}
 
+	return ocrWords;
     }
 
     public List<String> getBoxStrings(Map<Integer, String> correctTextLookupBySequenceNumber, Collection<OcrWord> rawOcrWords) {

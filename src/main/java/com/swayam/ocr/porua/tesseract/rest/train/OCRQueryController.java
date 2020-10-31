@@ -6,6 +6,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -29,9 +31,6 @@ import com.swayam.ocr.porua.tesseract.service.FileSystemUtil;
 import com.swayam.ocr.porua.tesseract.service.OcrDataStoreService;
 import com.swayam.ocr.porua.tesseract.service.TesseractOcrWordAnalyser;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 @RestController
 @RequestMapping("/ocr/train/query")
 public class OCRQueryController {
@@ -47,29 +46,29 @@ public class OCRQueryController {
     }
 
     @GetMapping(value = "/book", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Flux<Book> getBooks() {
-	return Flux.fromIterable(ocrDataStoreService.getBooks());
+    public List<Book> getBooks() {
+	return ocrDataStoreService.getBooks();
     }
 
     @GetMapping(value = "/book/{bookId}/page-count", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<Integer> getPagesInBook(@PathVariable("bookId") final long bookId) {
-	return Mono.just(ocrDataStoreService.getPageCount(bookId));
+    public Integer getPagesInBook(@PathVariable("bookId") final long bookId) {
+	return ocrDataStoreService.getPageCount(bookId);
     }
 
     @GetMapping(value = "/page", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Flux<PageImage> getPages(@RequestParam("bookId") final long bookId) {
-	return Flux.fromIterable(ocrDataStoreService.getPages(bookId));
+    public List<PageImage> getPages(@RequestParam("bookId") final long bookId) {
+	return ocrDataStoreService.getPages(bookId);
     }
 
     @GetMapping(value = "/word", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Flux<OcrWord> getOcrWords(@RequestParam("bookId") final long bookId, @RequestParam("pageImageId") final long pageImageId) {
+    public Collection<OcrWord> getOcrWords(@RequestParam("bookId") final long bookId, @RequestParam("pageImageId") final long pageImageId) {
 	LOG.info("Retrieving OCR Words for Book Id {} and PageId {}", bookId, pageImageId);
-	return Flux.fromIterable(ocrDataStoreService.getWords(bookId, pageImageId));
+	return ocrDataStoreService.getWords(bookId, pageImageId);
     }
 
     @GetMapping(value = "/word/image")
-    public Mono<ResponseEntity<byte[]>> getOcrWordImage(@RequestParam("bookId") final long bookId, @RequestParam("pageImageId") final long pageImageId,
-	    @RequestParam("wordSequenceId") int wordSequenceId) throws IOException {
+    public ResponseEntity<byte[]> getOcrWordImage(@RequestParam("bookId") final long bookId, @RequestParam("pageImageId") final long pageImageId, @RequestParam("wordSequenceId") int wordSequenceId)
+	    throws IOException {
 	String pageImageName = ocrDataStoreService.getPageImage(pageImageId).getName();
 	Path imagePath = fileSystemUtil.getImageSaveLocation(pageImageName);
 
@@ -87,7 +86,7 @@ public class OCRQueryController {
 	bos.flush();
 	HttpHeaders responseHeaders = new HttpHeaders();
 	responseHeaders.set("content-type", "image/" + extension);
-	return Mono.just(new ResponseEntity<byte[]>(bos.toByteArray(), responseHeaders, HttpStatus.OK));
+	return new ResponseEntity<byte[]>(bos.toByteArray(), responseHeaders, HttpStatus.OK);
     }
 
 }

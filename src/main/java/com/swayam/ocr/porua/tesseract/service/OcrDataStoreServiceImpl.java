@@ -2,6 +2,8 @@ package com.swayam.ocr.porua.tesseract.service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.transaction.Transactional;
 
@@ -34,8 +36,8 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
     }
 
     @Override
-    public Iterable<Book> getBooks() {
-	return bookRepository.findAll();
+    public List<Book> getBooks() {
+	return StreamSupport.stream(bookRepository.findAll().spliterator(), false).collect(Collectors.toUnmodifiableList());
     }
 
     @Override

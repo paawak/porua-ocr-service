@@ -9,17 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.swayam.ocr.porua.tesseract.model.Language;
 import com.swayam.ocr.porua.tesseract.service.FileSystemUtil;
 import com.swayam.ocr.porua.tesseract.service.TesseractInvokerService;
-
-import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/ocr/simple")
@@ -39,23 +37,21 @@ public class SimpleOCRController {
     }
 
     @PostMapping(produces = MediaType.TEXT_PLAIN_VALUE)
-    public Mono<ResponseEntity<String>> uploadImageFile(@RequestPart("language") String languageAsString, @RequestPart("image") FilePart image) throws IOException {
-	LOGGER.info("languageAsString: {}", languageAsString);
+    public ResponseEntity<String> uploadImageFile(@RequestParam("language") Language language, @RequestParam("image") MultipartFile image) throws IOException {
+	LOGGER.info("language: {}", language);
 
-	Language language = Language.valueOf(languageAsString);
+	LOGGER.info("FileName: {}, ContentType: {}, Size: {}", image.getOriginalFilename(), image.getContentType(), image.getSize());
 
-	MediaType contentType = image.headers().getContentType();
-
-	LOGGER.info("FileName: {}, ContentType: {}", image.filename(), contentType);
+	MediaType contentType = MediaType.parseMediaType(image.getContentType());
 
 	if (!SUPPORTED_CONTENT_TYPES.contains(contentType)) {
 	    LOGGER.error("Un-supported ContentType: {}", contentType);
-	    return Mono.just(ResponseEntity.badRequest().body("unsupported content-type: " + contentType));
+	    return ResponseEntity.badRequest().body("unsupported content-type: " + contentType);
 	}
 
 	Path imageSavedPath = fileSystemUtil.saveMultipartFileAsImage(image);
 
-	return Mono.just(ResponseEntity.ok(tesseractInvokerService.submitToOCR(language, imageSavedPath)));
+	return ResponseEntity.ok(tesseractInvokerService.submitToOCR(language, imageSavedPath));
     }
 
 }

@@ -3,22 +3,21 @@ package com.swayam.ocr.porua.tesseract.rest.train;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.service.FileSystemUtil;
 import com.swayam.ocr.porua.tesseract.service.ImageProcessor;
-
-import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("/ocr/train/submit")
@@ -35,26 +34,25 @@ public class OCRSubmissionController {
     }
 
     @PostMapping(value = "/image", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Flux<OcrWord> submitPageAndAnalyzeWords(@RequestPart("bookId") final String bookIdString, @RequestPart("pageNumber") final String pageNumberString,
-	    @RequestPart("image") final FilePart image) throws IOException, URISyntaxException {
+    public List<OcrWord> submitPageAndAnalyzeWords(@RequestParam("bookId") final Long bookId, @RequestParam("pageNumber") final Integer pageNumber, @RequestParam("image") final MultipartFile image)
+	    throws IOException, URISyntaxException {
+	String imageFileName = image.getOriginalFilename();
+	LOG.info("BookId: {}, PageNumber: {}, Uploaded fileName: {}", bookId, pageNumber, imageFileName);
 
-	LOG.info("BookId: {}, PageNumber: {}, Uploaded fileName: {}", bookIdString, pageNumberString, image.filename());
-
-	String imageFileName = image.filename();
 	Path savedImagePath = fileSystemUtil.saveMultipartFileAsImage(image);
 
-	return imageProcessor.submitPageForAnalysis(Long.valueOf(bookIdString), Integer.parseInt(pageNumberString), imageFileName, savedImagePath);
+	return imageProcessor.submitPageForAnalysis(bookId, pageNumber, imageFileName, savedImagePath);
 
     }
 
     @PostMapping(value = "/pdf", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> uploadEBookInPdfFormat(@RequestPart("bookId") final String bookIdAsString, @RequestPart("image") FilePart eBookAsPdf) throws IOException {
+    public ResponseEntity<String> uploadEBookInPdfFormat(@RequestParam("bookId") final String bookIdAsString, @RequestParam("image") MultipartFile eBookAsPdf) throws IOException {
 
-	String eBookName = eBookAsPdf.filename();
-	MediaType mediaType = eBookAsPdf.headers().getContentType();
+	String eBookName = eBookAsPdf.getOriginalFilename();
+	MediaType mediaType = MediaType.parseMediaType(eBookAsPdf.getContentType());
 
 	LOG.info("bookId: {}", bookIdAsString);
-	LOG.info("FileName: {}, ContentType: {}, Size: {}", eBookName, mediaType, eBookAsPdf.headers().getContentLength());
+	LOG.info("FileName: {}, ContentType: {}, Size: {}", eBookName, mediaType, eBookAsPdf.getSize());
 
 	if (!MediaType.APPLICATION_PDF.equals(mediaType)) {
 	    return ResponseEntity.badRequest().body("Only PDF docs supported. Unsupported content-type: " + mediaType);

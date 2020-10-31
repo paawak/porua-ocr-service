@@ -1,11 +1,13 @@
 package com.swayam.ocr.porua.tesseract.service;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class FileSystemUtil {
@@ -21,9 +23,13 @@ public class FileSystemUtil {
 	return Paths.get(imageWriteDirectory, imageFileName);
     }
 
-    public Path saveMultipartFileAsImage(FilePart imageFile) {
-	Path imageOutputFilePath = getImageSaveLocation(imageFile.filename());
-	imageFile.transferTo(imageOutputFilePath).block();
+    public Path saveMultipartFileAsImage(MultipartFile image) {
+	Path imageOutputFilePath = getImageSaveLocation(image.getOriginalFilename());
+	try {
+	    Files.copy(image.getInputStream(), imageOutputFilePath);
+	} catch (IOException e) {
+	    throw new RuntimeException(e);
+	}
 	return imageOutputFilePath;
     }
 
