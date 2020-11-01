@@ -29,7 +29,7 @@ mvn clean install -P docker
     paawak/tesseract-ocr-rest:latest
     
 # Google Authentication
-1.  Webflux OAuth2: <https://docs.spring.io/spring-security/site/docs/5.1.1.RELEASE/reference/html/webflux-oauth2.html>
+
 1.  Spring Boot Tutorial: <https://spring.io/guides/tutorials/spring-boot-oauth2/>    
 1.  Google OpenID: <https://developers.google.com/identity/protocols/oauth2/openid-connect>
 
