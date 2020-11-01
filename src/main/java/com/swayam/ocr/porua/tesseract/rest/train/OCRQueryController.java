@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.Principal;
 import java.util.Collection;
 import java.util.List;
 
@@ -18,7 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,8 +48,8 @@ public class OCRQueryController {
     }
 
     @GetMapping(value = "/book", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Book> getBooks(@AuthenticationPrincipal OidcUser principal) {
-	System.out.println("**************** " + principal.getName());
+    public List<Book> getBooks(@AuthenticationPrincipal Principal principal) {
+	System.out.println(OCRQueryController.class + "**************** " + principal.getName());
 	return ocrDataStoreService.getBooks();
     }
 
