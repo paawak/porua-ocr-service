@@ -30,8 +30,8 @@ mvn clean install -P docker
     
 # Google Authentication
 
-1.  Spring Boot Tutorial: <https://spring.io/guides/tutorials/spring-boot-oauth2/>    
-1.  Google OpenID: <https://developers.google.com/identity/protocols/oauth2/openid-connect>
+1.  Spring Security Architecture: <https://spring.io/guides/topicals/spring-security-architecture>    
+1.  Google Identity Integration: <https://developers.google.com/identity/sign-in/web/backend-auth>
 
 # Accessing the API
 
