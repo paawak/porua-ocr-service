@@ -34,7 +34,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-	http.cors(config -> config.configurationSource(corsConfigurationSource())).addFilterBefore(authenticationFilter(), BasicAuthenticationFilter.class)
+	http.cors(config -> config.configurationSource(corsConfigurationSource())).addFilterBefore(authenticationFilter(), BasicAuthenticationFilter.class).csrf().disable()
 		.authorizeRequests(a -> a.antMatchers("/", "/error", "/webjars/**").permitAll().anyRequest().authenticated())
 		.exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
     }
