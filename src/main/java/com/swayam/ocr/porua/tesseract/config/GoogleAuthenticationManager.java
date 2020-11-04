@@ -2,7 +2,7 @@ package com.swayam.ocr.porua.tesseract.config;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationServiceExceptio
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
@@ -63,7 +64,7 @@ public class GoogleAuthenticationManager implements AuthenticationManager {
 	String familyName = (String) payload.get("family_name");
 	String givenName = (String) payload.get("given_name");
 
-	return new UsernamePasswordAuthenticationToken(name, "", new ArrayList<>());
+	return new UsernamePasswordAuthenticationToken(name, "uuuu", Arrays.asList(new SimpleGrantedAuthority("ROLE_USER")));
     }
 
 }
