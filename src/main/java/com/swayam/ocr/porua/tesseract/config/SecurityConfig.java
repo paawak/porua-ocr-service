@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -33,7 +34,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-	http.cors().and().addFilterAfter(authenticationFilter(), BasicAuthenticationFilter.class)
+	http.cors(config -> config.configurationSource(corsConfigurationSource())).addFilterBefore(authenticationFilter(), BasicAuthenticationFilter.class)
 		.authorizeRequests(a -> a.antMatchers("/", "/error", "/webjars/**").permitAll().anyRequest().authenticated())
 		.exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
     }
@@ -43,12 +44,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	return new GoogleAuthenticationManager();
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    private CorsConfigurationSource corsConfigurationSource() {
 	UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 	CorsConfiguration corsConfiguration = new CorsConfiguration().applyPermitDefaultValues();
 	corsConfiguration.addAllowedOrigin("http://localhost:3000");
-	corsConfiguration.addAllowedMethod("*");
+	corsConfiguration.addAllowedMethod(HttpMethod.GET);
+	corsConfiguration.addAllowedMethod(HttpMethod.PUT);
+	corsConfiguration.addAllowedMethod(HttpMethod.POST);
+	corsConfiguration.addAllowedMethod(HttpMethod.DELETE);
+	corsConfiguration.addAllowedMethod(HttpMethod.OPTIONS);
+	corsConfiguration.addAllowedHeader("X-Requested-With");
+	corsConfiguration.addAllowedHeader("Content-Type");
+	corsConfiguration.addAllowedHeader("Accept");
+	corsConfiguration.addAllowedHeader("Origin");
+	corsConfiguration.addAllowedHeader("Authorization");
 	source.registerCorsConfiguration("/**/**", corsConfiguration);
 	return source;
     }
