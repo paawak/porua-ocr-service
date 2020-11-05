@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +22,7 @@ import com.swayam.ocr.porua.tesseract.service.ImageProcessor;
 
 @RestController
 @RequestMapping("/ocr/train/submit")
+@Secured("ADMIN")
 public class OCRSubmissionController {
 
     private static final Logger LOG = LoggerFactory.getLogger(OCRSubmissionController.class);
