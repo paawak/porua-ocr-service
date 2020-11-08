@@ -65,7 +65,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	corsConfiguration.addAllowedHeader("Accept");
 	corsConfiguration.addAllowedHeader("Origin");
 	corsConfiguration.addAllowedHeader("Authorization");
-	source.registerCorsConfiguration("/**/**", corsConfiguration);
+	source.registerCorsConfiguration("/ocr/**", corsConfiguration);
 	return source;
     }
 
