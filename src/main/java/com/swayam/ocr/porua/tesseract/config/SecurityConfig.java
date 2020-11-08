@@ -32,13 +32,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private static final String[] URLS_TO_ALLOW_WITHOUT_AUTH = { "/ocr/train/query/word/image", "/v2/api-docs", "/configuration/**", "/swagger-ui.html", "/swagger*/**", "/webjars/**" };
-
-    private final AuthenticationConverter authenticationConverter;
-
-    public SecurityConfig(AuthenticationConverter authenticationConverter) {
-	this.authenticationConverter = authenticationConverter;
-    }
+    private static final String OCR_TRAIN_QUERY_WORD_IMAGE = "/ocr/train/query/word/image";
+    private static final String[] URLS_TO_ALLOW_WITHOUT_AUTH = { "/v2/api-docs", "/configuration/**", "/swagger-ui.html", "/swagger*/**", "/webjars/**" };
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -76,6 +71,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		// do nothing
 	    }
 	};
+	AuthenticationConverter authenticationConverter = new AuthenticationTokenExtractor(new AntPathRequestMatcher(OCR_TRAIN_QUERY_WORD_IMAGE));
 	AuthenticationFilter filter = new AuthenticationFilter(authenticationManager(), authenticationConverter);
 	RequestMatcher requestMatcher =
 		new NegatedRequestMatcher(new OrRequestMatcher(Arrays.stream(URLS_TO_ALLOW_WITHOUT_AUTH).map(pattern -> new AntPathRequestMatcher(pattern)).collect(Collectors.toList())));

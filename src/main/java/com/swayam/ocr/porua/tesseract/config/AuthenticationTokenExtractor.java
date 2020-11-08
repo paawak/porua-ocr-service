@@ -8,20 +8,32 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedCredentialsNotFoundException;
-import org.springframework.stereotype.Service;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.StringUtils;
 
-@Service
 public class AuthenticationTokenExtractor implements AuthenticationConverter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationTokenExtractor.class);
+
+    private static final String AUTH_TOKEN_NAME = "Authorization";
+
+    private final RequestMatcher authTokenAsRequestParam;
+
+    public AuthenticationTokenExtractor(RequestMatcher authTokenAsRequestParam) {
+	this.authTokenAsRequestParam = authTokenAsRequestParam;
+    }
 
     @Override
     public Authentication convert(HttpServletRequest request) {
 
 	String path = request.getServletPath();
 
-	String idToken = request.getHeader("Authorization");
+	String idToken;
+	if (authTokenAsRequestParam.matches(request)) {
+	    idToken = request.getParameter(AUTH_TOKEN_NAME);
+	} else {
+	    idToken = request.getHeader(AUTH_TOKEN_NAME);
+	}
 
 	if (!StringUtils.hasText(idToken)) {
 	    LOGGER.warn("No auth token found for {}", path);
