@@ -34,6 +34,20 @@ mvn clean install -P docker
 1.  Spring Security Architecture: <https://spring.io/guides/topicals/spring-security-architecture>    
 1.  Google Identity Integration: <https://developers.google.com/identity/sign-in/web/backend-auth>
 
+## Debugging Spring Security Filters
+
+In the annotation:
+
+    @EnableWebSecurity(debug = true)
+
+In application.yml:
+   
+```yaml 
+logging:
+  level:    
+        org.springframework.security.web.FilterChainProxy: DEBUG
+```
+
 # Accessing the API
 
 The REST API is at /rest/ocr. It takes in the below form data:
