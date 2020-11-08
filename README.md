@@ -45,7 +45,7 @@ In application.yml:
 ```yaml 
 logging:
   level:    
-        org.springframework.security.web.FilterChainProxy: DEBUG
+    org.springframework.security.web.FilterChainProxy: DEBUG
 ```
 
 # Accessing the API
