@@ -49,7 +49,7 @@ public class OCRQueryController {
 
     @GetMapping(value = "/book", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Book> getBooks(@AuthenticationPrincipal Authentication principal) {
-	LOG.debug("**************** principal: {}", principal.getAuthorities());
+	LOG.debug("**************** details: {}", principal.getDetails());
 	return ocrDataStoreService.getBooks();
     }
 
