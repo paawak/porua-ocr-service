@@ -5,6 +5,8 @@ import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -22,11 +24,14 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 
 public class GoogleAuthenticationManager implements AuthenticationManager {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(GoogleAuthenticationManager.class);
+
     // TODO FIXME: move this to config file
     private static final String CLIENT_ID = "955630342713-55eu6b3k5hmsg8grojjmk8mj1gi47g37.apps.googleusercontent.com";
 
     @Override
     public Authentication authenticate(final Authentication authentication) {
+	LOGGER.info("start authentication...");
 	HttpTransport transport = new NetHttpTransport();
 	JsonFactory jsonFactory = new JacksonFactory();
 	GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
@@ -42,10 +47,12 @@ public class GoogleAuthenticationManager implements AuthenticationManager {
 	try {
 	    googleToken = verifier.verify((String) authentication.getCredentials());
 	} catch (GeneralSecurityException | IOException e) {
+	    LOGGER.warn("authentication failed while decoding token");
 	    throw new AuthenticationServiceException("Error verifying auth token", e);
 	}
 
 	if (googleToken == null) {
+	    LOGGER.warn("authentication failed: no token");
 	    throw new BadCredentialsException("Invalid token");
 	}
 
@@ -53,7 +60,7 @@ public class GoogleAuthenticationManager implements AuthenticationManager {
 
 	// Print user identifier
 	String userId = payload.getSubject();
-	System.out.println("User ID: " + userId);
+	LOGGER.info("authentication success, userId: {}", userId);
 
 	// Get profile information from payload
 	String email = payload.getEmail();
