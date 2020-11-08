@@ -30,6 +30,7 @@ mvn clean install -P docker
     
 # Google Authentication
 
+1.  Spring security: <https://docs.spring.io/spring-security/site/docs/current/reference/html5/>
 1.  Spring Security Architecture: <https://spring.io/guides/topicals/spring-security-architecture>    
 1.  Google Identity Integration: <https://developers.google.com/identity/sign-in/web/backend-auth>
 
