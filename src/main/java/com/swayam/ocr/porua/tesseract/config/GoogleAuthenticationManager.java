@@ -22,6 +22,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
+import com.swayam.ocr.porua.tesseract.model.UserRole;
 
 public class GoogleAuthenticationManager implements AuthenticationManager {
 
@@ -56,11 +57,14 @@ public class GoogleAuthenticationManager implements AuthenticationManager {
 	String email = payload.getEmail();
 	String name = (String) payload.get("name");
 
+	// TODO FIXME get this from db
+	UserRole role = UserRole.ADMIN_ROLE;
+
 	LOGGER.trace("authentication success, userId: {}", payload.getSubject());
 
-	UserDetails userDetails = new UserDetails(-1L, email, name);
+	UserDetails userDetails = new UserDetails(-1L, email, name, role);
 
-	UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(name, "DontBotherBro", Arrays.asList(new SimpleGrantedAuthority("ROLE_USER")));
+	UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(name, "DontBotherBro", Arrays.asList(new SimpleGrantedAuthority(role.name())));
 	token.setDetails(userDetails);
 	return token;
     }

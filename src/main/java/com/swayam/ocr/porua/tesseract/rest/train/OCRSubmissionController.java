@@ -22,7 +22,7 @@ import com.swayam.ocr.porua.tesseract.service.ImageProcessor;
 
 @RestController
 @RequestMapping("/ocr/train/submit")
-@Secured("ADMIN")
+@Secured("ADMIN_ROLE")
 public class OCRSubmissionController {
 
     private static final Logger LOG = LoggerFactory.getLogger(OCRSubmissionController.class);

@@ -8,5 +8,6 @@ public class UserDetails {
     private final long id;
     private final String email;
     private final String name;
+    private final UserRole role;
 
 }
