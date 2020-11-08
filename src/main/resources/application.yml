@@ -9,7 +9,7 @@ logging:
     com.swayam.ocr.porua: DEBUG
     org.springframework.web: INFO
     org.springframework.web.client.RestTemplate: DEBUG
-    org.springframework.security.web.FilterChainProxy: DEBUG
+    org.springframework.security.web.FilterChainProxy: WARN
 
 spring:
   servlet:
@@ -17,7 +17,7 @@ spring:
       max-file-size: 500MB
       max-request-size: 500MB
   datasource:
-    url: jdbc:mysql://localhost:3306/exp_to_b_del?useSSL=false
+    url: jdbc:mysql://localhost:3306/porua?useSSL=false
     username: root
     password: root123
     driver-class-name: com.mysql.cj.jdbc.Driver
