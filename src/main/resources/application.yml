@@ -8,6 +8,8 @@ logging:
     root: INFO
     com.swayam.ocr.porua: DEBUG
     org.springframework.web: INFO
+    org.springframework.web.client.RestTemplate: DEBUG
+    org.springframework.security.web.FilterChainProxy: WARN
 
 spring:
   servlet:

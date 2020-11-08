@@ -29,9 +29,24 @@ mvn clean install -P docker
     paawak/tesseract-ocr-rest:latest
     
 # Google Authentication
-1.  Webflux OAuth2: <https://docs.spring.io/spring-security/site/docs/5.1.1.RELEASE/reference/html/webflux-oauth2.html>
-1.  Spring Boot Tutorial: <https://spring.io/guides/tutorials/spring-boot-oauth2/>    
-1.  Google OpenID: <https://developers.google.com/identity/protocols/oauth2/openid-connect>
+
+1.  Spring security: <https://docs.spring.io/spring-security/site/docs/current/reference/html5/>
+1.  Spring Security Architecture: <https://spring.io/guides/topicals/spring-security-architecture>    
+1.  Google Identity Integration: <https://developers.google.com/identity/sign-in/web/backend-auth>
+
+## Debugging Spring Security Filters
+
+In the annotation:
+
+    @EnableWebSecurity(debug = true)
+
+In application.yml:
+   
+```yaml 
+logging:
+  level:    
+        org.springframework.security.web.FilterChainProxy: DEBUG
+```
 
 # Accessing the API
 
