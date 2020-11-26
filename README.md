@@ -91,6 +91,13 @@ Reference: <https://docs.liquibase.com/tools-integrations/maven/commands/home.ht
 ## Manually clear all existing checksums
 
     mvn -P mysql liquibase:clearCheckSums
+    mvn -P mysql liquibase:changelogSync
+    
+Then execute the below SQLs:
+
+    update DATABASECHANGELOG set FILENAME='classpath:/sql/liquibase/V1__ocr_word_initial_schema.xml' where ID=1;
+    update DATABASECHANGELOG set FILENAME='classpath:/sql/liquibase/V2__hard-coded-books.xml' where ID=2;
+    update DATABASECHANGELOG set FILENAME='classpath:/sql/liquibase/V3__page_new_cols_ignore_complete.xml' where ID=3;        
 
 ## Generate Mysql SQL Schema from existing DB
 
