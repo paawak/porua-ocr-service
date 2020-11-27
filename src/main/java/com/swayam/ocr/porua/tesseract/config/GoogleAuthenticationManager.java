@@ -62,7 +62,11 @@ public class GoogleAuthenticationManager implements AuthenticationManager {
 
 	LOGGER.trace("authentication success, userId: {}", payload.getSubject());
 
-	UserDetails userDetails = new UserDetails(-1L, email, name, role);
+	UserDetails userDetails = new UserDetails();
+	userDetails.setId(-1);
+	userDetails.setEmail(email);
+	userDetails.setName(email);
+	userDetails.setRole(role);
 
 	UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(name, "DontBotherBro", Arrays.asList(new SimpleGrantedAuthority(role.name())));
 	token.setDetails(userDetails);

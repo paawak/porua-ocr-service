@@ -4,9 +4,12 @@
 	xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
-	<include file="V1__ocr_word_initial_schema.xml" relativeToChangelogFile="true" />
-	<include file="V2__hard-coded-books.xml" relativeToChangelogFile="true" />
-	<include file="V3__page_new_cols_ignore_complete.xml" relativeToChangelogFile="true" />
-	<include file="V4__user_table_schema.xml" relativeToChangelogFile="true" />
-	<include file="V5__ocr_word_new_col_id.xml" relativeToChangelogFile="true" />
+	<changeSet author="Palash Ray" id="5">
+		<addColumn tableName="ocr_word">
+			<column autoIncrement="true" name="id" type="INT">
+				<constraints primaryKey="true"
+					primaryKeyName="SYS_PK_30109" />
+			</column>			
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>
