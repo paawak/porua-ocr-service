@@ -77,7 +77,7 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 
     @Override
     public OcrWord getWord(OcrWordId ocrWordId) {
-	return ocrWordRepository.findById(ocrWordId).get();
+	return ocrWordRepository.findByOcrWordId(ocrWordId).get();
     }
 
     @Transactional
@@ -99,7 +99,7 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 
     @Override
     public void removeWord(OcrWordId ocrWordId) {
-	ocrWordRepository.deleteById(ocrWordId);
+	ocrWordRepository.deleteByOcrWordId(ocrWordId);
     }
 
     @Transactional
