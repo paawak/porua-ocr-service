@@ -9,4 +9,6 @@
 	<include file="V3__page_new_cols_ignore_complete.xml" relativeToChangelogFile="true" />
 	<include file="V4__user_table_schema.xml" relativeToChangelogFile="true" />
 	<include file="V5__ocr_word_new_col_id.xml" relativeToChangelogFile="true" />
+	<include file="V6__remove_correction_details_ocr_word.xml" relativeToChangelogFile="true" />
+	<include file="V7__corrected_word_table_schema.xml" relativeToChangelogFile="true" />
 </databaseChangeLog>

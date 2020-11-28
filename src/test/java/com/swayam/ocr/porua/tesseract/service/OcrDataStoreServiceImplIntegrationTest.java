@@ -303,7 +303,6 @@ class OcrDataStoreServiceImplIntegrationTest {
 	OcrWord ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 
 	OcrWord ocrWord2_1 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	ocrWord2_1.setCorrectedText("I have changed");
 
 	List<OcrWord> expected = Arrays.asList(ocrWord1, ocrWord2_1, ocrWord3);
 
@@ -359,7 +358,6 @@ class OcrDataStoreServiceImplIntegrationTest {
 	// then
 	assertEquals(1, result);
 	List<OcrWord> words = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
-	ocrWord2.setIgnored(true);
 	assertEquals(Arrays.asList(ocrWord1, ocrWord2, ocrWord3), words);
     }
 
@@ -368,7 +366,6 @@ class OcrDataStoreServiceImplIntegrationTest {
 	// given
 	OcrWord ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
 	OcrWord ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	ocrWord2.setIgnored(true);
 	OcrWord ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 	OcrWord ocrWord4 = getOcrWord(1, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
 	OcrWord ocrWord5 = getOcrWord(1, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
@@ -395,7 +392,6 @@ class OcrDataStoreServiceImplIntegrationTest {
 	// given
 	OcrWord ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
 	OcrWord ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	ocrWord2.setIgnored(true);
 	OcrWord ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 	OcrWord ocrWord4 = getOcrWord(1, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
 	OcrWord ocrWord5 = getOcrWord(1, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
@@ -419,8 +415,6 @@ class OcrDataStoreServiceImplIntegrationTest {
 	return (ResultSet res, int rowNum) -> {
 	    OcrWord ocrWord =
 		    getOcrWord(1, 1, res.getInt("x1"), res.getInt("y1"), res.getInt("x2"), res.getInt("y2"), res.getFloat("confidence"), res.getString("raw_text"), res.getInt("word_sequence_id"));
-	    ocrWord.setCorrectedText(res.getString("corrected_text"));
-	    ocrWord.setIgnored(res.getBoolean("ignored"));
 	    return ocrWord;
 	};
     }

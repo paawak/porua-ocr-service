@@ -15,9 +15,9 @@ public interface OcrWordRepository extends CrudRepository<OcrWord, Long> {
 
     Optional<OcrWord> findByOcrWordId(OcrWordId ocrWordId);
 
-    int countByIgnoredFalseAndOcrWordIdBookIdAndOcrWordIdPageImageId(long bookId, long pageImageId);
+    int countByOcrWordIdBookIdAndOcrWordIdPageImageId(long bookId, long pageImageId);
 
-    List<OcrWord> findByIgnoredFalseAndOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(long bookId, long pageImageId);
+    List<OcrWord> findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(long bookId, long pageImageId);
 
     @Modifying
     @Query("update OcrWord set ignored = TRUE where ocrWordId = :ocrWordId")

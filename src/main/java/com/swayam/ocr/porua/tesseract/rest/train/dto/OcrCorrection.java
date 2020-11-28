@@ -6,10 +6,6 @@ public interface OcrCorrection {
 
     OcrWordId getOcrWordId();
 
-    void setOcrWordId(OcrWordId ocrWordId);
-
     String getCorrectedText();
-
-    void setCorrectedText(String correctedText);
 
 }

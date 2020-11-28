@@ -7,7 +7,7 @@
 	<changeSet author="Palash Ray" id="6">
 		<dropColumn tableName="ocr_word">
 			<column name="corrected_text" />
-			<column name="ignore" />
+			<column name="ignored" />
 		</dropColumn>
 	</changeSet>
 </databaseChangeLog>

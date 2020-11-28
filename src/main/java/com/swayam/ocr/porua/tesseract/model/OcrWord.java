@@ -3,9 +3,11 @@ package com.swayam.ocr.porua.tesseract.model;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrection;
@@ -27,9 +29,6 @@ public class OcrWord implements OcrCorrection {
     @Column(name = "raw_text")
     private String rawText;
 
-    @Column(name = "corrected_text")
-    private String correctedText;
-
     @Column
     private int x1;
 
@@ -48,7 +47,12 @@ public class OcrWord implements OcrCorrection {
     @Column(name = "line_number")
     private Integer lineNumber;
 
-    @Column
-    private boolean ignored;
+    @OneToOne(fetch = FetchType.EAGER, mappedBy = "ocrWord")
+    private CorrectedWord ocrWord;
+
+    @Override
+    public String getCorrectedText() {
+	return (ocrWord == null) ? null : ocrWord.getCorrectedText();
+    }
 
 }

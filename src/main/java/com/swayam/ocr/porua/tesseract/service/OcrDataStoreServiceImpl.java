@@ -67,12 +67,12 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 
     @Override
     public int getWordCount(long bookId, long pageImageId) {
-	return ocrWordRepository.countByIgnoredFalseAndOcrWordIdBookIdAndOcrWordIdPageImageId(bookId, pageImageId);
+	return ocrWordRepository.countByOcrWordIdBookIdAndOcrWordIdPageImageId(bookId, pageImageId);
     }
 
     @Override
     public Collection<OcrWord> getWords(long bookId, long pageImageId) {
-	return ocrWordRepository.findByIgnoredFalseAndOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
+	return ocrWordRepository.findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
     }
 
     @Override
