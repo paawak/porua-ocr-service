@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,13 +28,18 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.swayam.ocr.porua.tesseract.repo.UserDetailsRepository;
+
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private static final String OCR_TRAIN_QUERY_WORD_IMAGE = "/ocr/train/query/word/image";
-    private static final String[] URLS_TO_ALLOW_WITHOUT_AUTH = { "/v2/api-docs", "/configuration/**", "/swagger-ui.html", "/swagger*/**", "/webjars/**" };
+    private static final String[] URLS_TO_ALLOW_WITHOUT_AUTH = { "/v2/api-docs", "/configuration/**", "/swagger-ui.html", "/swagger*/**", "/webjars/**", "/ocr/train/user/register" };
+
+    @Autowired
+    private UserDetailsRepository userDetailsRepository;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -43,7 +49,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected AuthenticationManager authenticationManager() {
-	return new GoogleAuthenticationManager();
+	return new GoogleAuthenticationManager(userDetailsRepository);
     }
 
     private CorsConfigurationSource corsConfigurationSource() {

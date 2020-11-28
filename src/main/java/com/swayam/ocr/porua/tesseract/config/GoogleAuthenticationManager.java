@@ -1,74 +1,49 @@
 package com.swayam.ocr.porua.tesseract.config;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
-import com.swayam.ocr.porua.tesseract.model.UserRole;
+import com.swayam.ocr.porua.tesseract.repo.UserDetailsRepository;
+import com.swayam.ocr.porua.tesseract.service.GoogleTokenVerifier;
 
 public class GoogleAuthenticationManager implements AuthenticationManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GoogleAuthenticationManager.class);
 
-    // TODO FIXME: move this to config file
-    private static final String CLIENT_ID = "955630342713-55eu6b3k5hmsg8grojjmk8mj1gi47g37.apps.googleusercontent.com";
+    private final UserDetailsRepository userDetailsRepository;
+
+    public GoogleAuthenticationManager(UserDetailsRepository userDetailsRepository) {
+	this.userDetailsRepository = userDetailsRepository;
+    }
 
     @Override
     public Authentication authenticate(final Authentication authentication) {
 	LOGGER.info("start authentication...");
-	HttpTransport transport = new NetHttpTransport();
-	JsonFactory jsonFactory = new JacksonFactory();
-	GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory).setAudience(Collections.singletonList(CLIENT_ID)).build();
 
-	GoogleIdToken googleToken;
-
-	try {
-	    googleToken = verifier.verify((String) authentication.getCredentials());
-	} catch (GeneralSecurityException | IOException e) {
-	    LOGGER.warn("authentication failed while decoding token");
-	    throw new AuthenticationServiceException("Error verifying auth token", e);
-	}
-
-	if (googleToken == null) {
-	    LOGGER.warn("authentication failed: no token");
-	    throw new BadCredentialsException("Invalid token");
-	}
-
-	Payload payload = googleToken.getPayload();
+	Payload payload = new GoogleTokenVerifier().verifyToken((String) authentication.getCredentials());
 
 	String email = payload.getEmail();
-	String name = (String) payload.get("name");
 
-	// TODO FIXME get this from db
-	UserRole role = UserRole.ADMIN_ROLE;
+	Optional<UserDetails> optUserDetails = userDetailsRepository.findByEmail(email);
 
-	LOGGER.trace("authentication success, userId: {}", payload.getSubject());
+	if (optUserDetails.isEmpty()) {
+	    throw new AuthenticationServiceException("User not registered");
+	}
 
-	UserDetails userDetails = new UserDetails();
-	userDetails.setId(-1);
-	userDetails.setEmail(email);
-	userDetails.setName(email);
-	userDetails.setRole(role);
+	UserDetails userDetails = optUserDetails.get();
 
-	UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(name, "DontBotherBro", Arrays.asList(new SimpleGrantedAuthority(role.name())));
+	UsernamePasswordAuthenticationToken token =
+		new UsernamePasswordAuthenticationToken(userDetails.getName(), "DontBotherBro", Arrays.asList(new SimpleGrantedAuthority(userDetails.getRole().name())));
 	token.setDetails(userDetails);
 	return token;
     }
