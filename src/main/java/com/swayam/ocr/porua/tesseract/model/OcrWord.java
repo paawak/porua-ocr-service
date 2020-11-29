@@ -10,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrection;
 
 import lombok.Data;
@@ -47,6 +48,7 @@ public class OcrWord implements OcrCorrection {
     @Column(name = "line_number")
     private Integer lineNumber;
 
+    @JsonBackReference
     @OneToOne(fetch = FetchType.EAGER, mappedBy = "ocrWord")
     private CorrectedWord ocrWord;
 
