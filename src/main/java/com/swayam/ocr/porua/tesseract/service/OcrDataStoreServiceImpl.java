@@ -2,6 +2,7 @@ package com.swayam.ocr.porua.tesseract.service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -10,10 +11,13 @@ import javax.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
+import com.swayam.ocr.porua.tesseract.model.CorrectedWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
+import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.repo.BookRepository;
+import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepository;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepository;
 import com.swayam.ocr.porua.tesseract.repo.PageImageRepository;
 
@@ -23,11 +27,13 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
     private final BookRepository bookRepository;
     private final PageImageRepository pageImageRepository;
     private final OcrWordRepository ocrWordRepository;
+    private final CorrectedWordRepository correctedWordRepository;
 
-    public OcrDataStoreServiceImpl(BookRepository bookRepository, PageImageRepository pageImageRepository, OcrWordRepository ocrWordRepository) {
+    public OcrDataStoreServiceImpl(BookRepository bookRepository, PageImageRepository pageImageRepository, OcrWordRepository ocrWordRepository, CorrectedWordRepository correctedWordRepository) {
 	this.bookRepository = bookRepository;
 	this.pageImageRepository = pageImageRepository;
 	this.ocrWordRepository = ocrWordRepository;
+	this.correctedWordRepository = correctedWordRepository;
     }
 
     @Override
@@ -93,8 +99,26 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 
     @Transactional
     @Override
-    public int updateCorrectTextInOcrWord(OcrWordId ocrWordId, String correctedText) {
-	return ocrWordRepository.updateCorrectedText(ocrWordId, correctedText);
+    public int updateCorrectTextInOcrWord(OcrWordId ocrWordId, String correctedText, UserDetails user) {
+
+	OcrWord ocrWord = getWord(ocrWordId);
+
+	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWord(ocrWord);
+
+	if (existingCorrection.isPresent()) {
+	    correctedWordRepository.updateCorrectedText(ocrWord, correctedText, user);
+	    return 1;
+	}
+
+	CorrectedWord correctedWord = new CorrectedWord();
+	correctedWord.setCorrectedText(correctedText);
+	correctedWord.setIgnored(false);
+	correctedWord.setOcrWord(ocrWord);
+	correctedWord.setUser(user);
+
+	correctedWordRepository.save(correctedWord);
+
+	return 1;
     }
 
     @Override

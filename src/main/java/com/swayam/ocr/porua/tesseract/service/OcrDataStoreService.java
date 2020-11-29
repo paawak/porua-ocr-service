@@ -7,6 +7,7 @@ import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
+import com.swayam.ocr.porua.tesseract.model.UserDetails;
 
 public interface OcrDataStoreService {
 
@@ -30,7 +31,7 @@ public interface OcrDataStoreService {
 
     OcrWord addOcrWord(OcrWord rawOcrWord);
 
-    int updateCorrectTextInOcrWord(OcrWordId ocrWordId, String correctedText);
+    int updateCorrectTextInOcrWord(OcrWordId ocrWordId, String correctedText, UserDetails user);
 
     OcrWord getWord(OcrWordId ocrWordId);
 

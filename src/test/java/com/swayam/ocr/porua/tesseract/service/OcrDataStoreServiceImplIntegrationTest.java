@@ -24,6 +24,7 @@ import com.swayam.ocr.porua.tesseract.model.Language;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
+import com.swayam.ocr.porua.tesseract.model.UserDetails;
 
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
 @ActiveProfiles("test")
@@ -311,7 +312,7 @@ class OcrDataStoreServiceImplIntegrationTest {
 	testClass.addOcrWord(ocrWord3);
 
 	// when
-	testClass.updateCorrectTextInOcrWord(new OcrWordId(1, 1, 2), "I have changed");
+	testClass.updateCorrectTextInOcrWord(new OcrWordId(1, 1, 2), "I have changed", new UserDetails());
 
 	// then
 	List<OcrWord> results = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());

@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
+import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrectionDto;
 import com.swayam.ocr.porua.tesseract.service.OcrDataStoreService;
 
@@ -39,8 +42,10 @@ public class OCRCorrectionController {
     }
 
     @PostMapping(value = "/word", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Integer> applyCorrectionToOcrWords(@RequestBody final List<OcrCorrectionDto> ocrWordsForCorrection) {
-	return ocrWordsForCorrection.stream().map(ocrWordForCorrection -> ocrDataStoreService.updateCorrectTextInOcrWord(ocrWordForCorrection.getOcrWordId(), ocrWordForCorrection.getCorrectedText()))
+    public List<Integer> applyCorrectionToOcrWords(@AuthenticationPrincipal Authentication authentication, @RequestBody final List<OcrCorrectionDto> ocrWordsForCorrection) {
+	UserDetails userDetails = (UserDetails) authentication.getDetails();
+	return ocrWordsForCorrection.stream()
+		.map(ocrWordForCorrection -> ocrDataStoreService.updateCorrectTextInOcrWord(ocrWordForCorrection.getOcrWordId(), ocrWordForCorrection.getCorrectedText(), userDetails))
 		.collect(Collectors.toUnmodifiableList());
     }
 
