@@ -10,7 +10,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrection;
 
 import lombok.Data;
@@ -28,7 +27,6 @@ public class CorrectedWord implements OcrCorrection {
     @JoinColumn(name = "user_id")
     private UserDetails user;
 
-    @JsonManagedReference
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ocr_word_id")
     private OcrWord ocrWord;

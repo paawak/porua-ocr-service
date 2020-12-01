@@ -103,7 +103,7 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 
 	OcrWord ocrWord = getWord(ocrWordId);
 
-	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWord(ocrWord);
+	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWordAndUser(ocrWord, user);
 
 	if (existingCorrection.isPresent()) {
 	    correctedWordRepository.updateCorrectedText(ocrWord, correctedText, user);

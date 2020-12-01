@@ -1,5 +1,7 @@
 package com.swayam.ocr.porua.tesseract.model;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -7,10 +9,10 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrection;
 
 import lombok.Data;
@@ -48,13 +50,13 @@ public class OcrWord implements OcrCorrection {
     @Column(name = "line_number")
     private Integer lineNumber;
 
-    @JsonBackReference
-    @OneToOne(fetch = FetchType.EAGER, mappedBy = "ocrWord")
-    private CorrectedWord ocrWord;
+    @JsonIgnore
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "ocrWord")
+    private List<CorrectedWord> ocrWords;
 
     @Override
     public String getCorrectedText() {
-	return (ocrWord == null) ? null : ocrWord.getCorrectedText();
+	return ((ocrWords == null) || (ocrWords.isEmpty())) ? null : ocrWords.get(0).getCorrectedText();
     }
 
 }

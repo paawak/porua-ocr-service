@@ -13,7 +13,7 @@ import com.swayam.ocr.porua.tesseract.model.UserDetails;
 
 public interface CorrectedWordRepository extends CrudRepository<CorrectedWord, Long> {
 
-    Optional<CorrectedWord> findByOcrWord(OcrWord ocrWord);
+    Optional<CorrectedWord> findByOcrWordAndUser(OcrWord ocrWord, UserDetails user);
 
     @Modifying
     @Query("update CorrectedWord set correctedText = :correctedText, user = :user where ocrWord = :ocrWord")
