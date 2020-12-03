@@ -1,11 +1,13 @@
 package com.swayam.ocr.porua.tesseract.rest.train.dto;
 
+import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
+import com.swayam.ocr.porua.tesseract.model.OcrWordWithCorrection;
 
 import lombok.Data;
 
 @Data
-public class OcrWordDtoImpl implements OcrWordDto, OcrCorrectionDto {
+public class OcrWordOutputDto implements OcrWord, OcrWordWithCorrection {
 
     private OcrWordId ocrWordId;
 
@@ -24,5 +26,7 @@ public class OcrWordDtoImpl implements OcrWordDto, OcrCorrectionDto {
     private Integer lineNumber;
 
     private String correctedText;
+
+    private boolean ignored;
 
 }

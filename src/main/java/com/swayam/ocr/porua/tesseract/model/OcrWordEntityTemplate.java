@@ -12,13 +12,12 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordDto;
 
 import lombok.Data;
 
 @MappedSuperclass
 @Data
-public abstract class OcrWordTemplate implements OcrWordDto {
+public abstract class OcrWordEntityTemplate implements OcrWord {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

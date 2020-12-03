@@ -24,10 +24,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
-import com.swayam.ocr.porua.tesseract.model.OcrWord;
+import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
-import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordDtoImpl;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 import com.swayam.ocr.porua.tesseract.service.FileSystemUtil;
 import com.swayam.ocr.porua.tesseract.service.OcrDataStoreService;
 import com.swayam.ocr.porua.tesseract.service.TesseractOcrWordAnalyser;
@@ -62,7 +62,7 @@ public class OCRQueryController {
     }
 
     @GetMapping(value = "/word", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Collection<OcrWordDtoImpl> getOcrWords(@RequestParam("bookId") final long bookId, @RequestParam("pageImageId") final long pageImageId) {
+    public Collection<OcrWordOutputDto> getOcrWords(@RequestParam("bookId") final long bookId, @RequestParam("pageImageId") final long pageImageId) {
 	LOG.info("Retrieving OCR Words for Book Id {} and PageId {}", bookId, pageImageId);
 	return ocrDataStoreService.getWords(bookId, pageImageId);
     }
@@ -73,7 +73,7 @@ public class OCRQueryController {
 	String pageImageName = ocrDataStoreService.getPageImage(pageImageId).getName();
 	Path imagePath = fileSystemUtil.getImageSaveLocation(pageImageName);
 
-	OcrWord ocrText = ocrDataStoreService.getWord(new OcrWordId(bookId, pageImageId, wordSequenceId));
+	OcrWordEntity ocrText = ocrDataStoreService.getWord(new OcrWordId(bookId, pageImageId, wordSequenceId));
 	BufferedImage fullImage = ImageIO.read(Files.newInputStream(imagePath));
 	Rectangle wordArea = TesseractOcrWordAnalyser.getWordArea(ocrText);
 	BufferedImage wordImage = fullImage.getSubimage(wordArea.x, wordArea.y, wordArea.width, wordArea.height);

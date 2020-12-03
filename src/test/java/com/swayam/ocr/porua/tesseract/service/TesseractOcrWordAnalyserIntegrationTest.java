@@ -13,7 +13,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import com.swayam.ocr.porua.tesseract.model.Language;
-import com.swayam.ocr.porua.tesseract.model.OcrWord;
+import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 
 class TesseractOcrWordAnalyserIntegrationTest {
@@ -26,7 +26,7 @@ class TesseractOcrWordAnalyserIntegrationTest {
 	TesseractOcrWordAnalyser testClass = new TesseractOcrWordAnalyser(Paths.get(TesseractOcrWordAnalyserIntegrationTest.class.getResource("/box-files/eng.Arial_Unicode_MS.exp0.png").toURI()),
 		Language.eng, TesseractOcrWordAnalyserIntegrationTest.class.getResource("/tessdata_best-4.0.0").getFile());
 
-	Collection<OcrWord> rawOcrWords = testClass.extractWordsFromImage((wordSequenceId) -> new OcrWordId(1, 1, wordSequenceId));
+	Collection<OcrWordEntity> rawOcrWords = testClass.extractWordsFromImage((wordSequenceId) -> new OcrWordId(1, 1, wordSequenceId));
 
 	// when
 	List<String> result = testClass.getBoxStrings(Collections.emptyMap(), rawOcrWords);

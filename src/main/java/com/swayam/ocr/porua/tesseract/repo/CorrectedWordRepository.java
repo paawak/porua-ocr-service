@@ -8,15 +8,15 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
 import com.swayam.ocr.porua.tesseract.model.CorrectedWord;
-import com.swayam.ocr.porua.tesseract.model.OcrWord;
+import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 
 public interface CorrectedWordRepository extends CrudRepository<CorrectedWord, Long> {
 
-    Optional<CorrectedWord> findByOcrWordAndUser(OcrWord ocrWord, UserDetails user);
+    Optional<CorrectedWord> findByOcrWordAndUser(OcrWordEntity ocrWord, UserDetails user);
 
     @Modifying
     @Query("update CorrectedWord set correctedText = :correctedText where ocrWord = :ocrWord and user = :user")
-    int updateCorrectedText(@Param("ocrWord") OcrWord ocrWord, @Param("correctedText") String correctedText, @Param("user") UserDetails user);
+    int updateCorrectedText(@Param("ocrWord") OcrWordEntity ocrWord, @Param("correctedText") String correctedText, @Param("user") UserDetails user);
 
 }

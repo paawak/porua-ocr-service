@@ -5,7 +5,7 @@ import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import lombok.Data;
 
 @Data
-public class OcrCorrectionDtoImpl implements OcrCorrectionDto {
+public class OcrCorrectionInputDto {
 
     private OcrWordId ocrWordId;
 

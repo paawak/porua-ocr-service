@@ -9,11 +9,11 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.Param;
 
+import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
-import com.swayam.ocr.porua.tesseract.model.OcrWordTemplate;
 
 @NoRepositoryBean
-public interface OcrWordRepositoryTemplate<T extends OcrWordTemplate> extends CrudRepository<T, Long> {
+public interface OcrWordRepositoryTemplate<T extends OcrWordEntityTemplate> extends CrudRepository<T, Long> {
 
     Optional<T> findByOcrWordId(OcrWordId ocrWordId);
 
@@ -22,7 +22,7 @@ public interface OcrWordRepositoryTemplate<T extends OcrWordTemplate> extends Cr
     List<T> findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(long bookId, long pageImageId);
 
     @Modifying
-    @Query("update OcrWord set ignored = TRUE where ocrWordId = :ocrWordId")
+    @Query("update OcrWordEntity set ignored = TRUE where ocrWordId = :ocrWordId")
     int markAsIgnored(@Param("ocrWordId") OcrWordId ocrWordId);
 
     void deleteByOcrWordId(OcrWordId ocrWordId);

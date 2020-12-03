@@ -21,11 +21,11 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.Language;
-import com.swayam.ocr.porua.tesseract.model.OcrWord;
+import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
-import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordDtoImpl;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
 @ActiveProfiles("test")
@@ -284,15 +284,15 @@ class OcrDataStoreServiceImplIntegrationTest {
     @Test
     void testAddOcrWord() {
 	// given
-	OcrWord ocrWord = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	OcrWordEntity ocrWord = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
 
-	List<OcrWord> expected = Arrays.asList(ocrWord);
+	List<OcrWordEntity> expected = Arrays.asList(ocrWord);
 
 	// when
 	testClass.addOcrWord(ocrWord);
 
 	// then
-	List<OcrWord> results = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
+	List<OcrWordEntity> results = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
 
 	assertEquals(expected, results);
     }
@@ -300,13 +300,13 @@ class OcrDataStoreServiceImplIntegrationTest {
     @Test
     void testUpdateCorrectTextInOcrWord() {
 	// given
-	OcrWord ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWord ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWord ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	OcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	OcrWordEntity ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	OcrWordEntity ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 
-	OcrWord ocrWord2_1 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	OcrWordEntity ocrWord2_1 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
 
-	List<OcrWord> expected = Arrays.asList(ocrWord1, ocrWord2_1, ocrWord3);
+	List<OcrWordEntity> expected = Arrays.asList(ocrWord1, ocrWord2_1, ocrWord3);
 
 	testClass.addOcrWord(ocrWord1);
 	testClass.addOcrWord(ocrWord2);
@@ -316,7 +316,7 @@ class OcrDataStoreServiceImplIntegrationTest {
 	testClass.updateCorrectTextInOcrWord(new OcrWordId(1, 1, 2), "I have changed", new UserDetails());
 
 	// then
-	List<OcrWord> results = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
+	List<OcrWordEntity> results = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
 
 	assertEquals(expected, results);
     }
@@ -324,11 +324,11 @@ class OcrDataStoreServiceImplIntegrationTest {
     @Test
     void testRemoveWord() {
 	// given
-	OcrWord ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWord ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWord ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	OcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	OcrWordEntity ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	OcrWordEntity ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 
-	List<OcrWord> expected = Arrays.asList(ocrWord1, ocrWord3);
+	List<OcrWordEntity> expected = Arrays.asList(ocrWord1, ocrWord3);
 
 	testClass.addOcrWord(ocrWord1);
 	testClass.addOcrWord(ocrWord2);
@@ -338,7 +338,7 @@ class OcrDataStoreServiceImplIntegrationTest {
 	testClass.removeWord(new OcrWordId(1, 1, 2));
 
 	// then
-	List<OcrWord> results = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
+	List<OcrWordEntity> results = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
 
 	assertEquals(expected, results);
     }
@@ -346,9 +346,9 @@ class OcrDataStoreServiceImplIntegrationTest {
     @Test
     void testMarkWordAsIgnored() {
 	// given
-	OcrWord ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWord ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWord ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	OcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	OcrWordEntity ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	OcrWordEntity ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 
 	testClass.addOcrWord(ocrWord1);
 	testClass.addOcrWord(ocrWord2);
@@ -359,31 +359,31 @@ class OcrDataStoreServiceImplIntegrationTest {
 
 	// then
 	assertEquals(1, result);
-	List<OcrWord> words = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
+	List<OcrWordEntity> words = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
 	assertEquals(Arrays.asList(ocrWord1, ocrWord2, ocrWord3), words);
     }
 
     @Test
     void testGetWords() {
 	// given
-	OcrWord ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWord ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWord ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
-	OcrWord ocrWord4 = getOcrWord(1, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWord ocrWord5 = getOcrWord(1, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWord ocrWord6 = getOcrWord(1, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
-	OcrWord ocrWord7 = getOcrWord(2, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWord ocrWord8 = getOcrWord(2, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWord ocrWord9 = getOcrWord(2, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	OcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	OcrWordEntity ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	OcrWordEntity ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	OcrWordEntity ocrWord4 = getOcrWord(1, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	OcrWordEntity ocrWord5 = getOcrWord(1, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	OcrWordEntity ocrWord6 = getOcrWord(1, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	OcrWordEntity ocrWord7 = getOcrWord(2, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	OcrWordEntity ocrWord8 = getOcrWord(2, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	OcrWordEntity ocrWord9 = getOcrWord(2, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 
-	List<OcrWord> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3, ocrWord4, ocrWord5, ocrWord6, ocrWord7, ocrWord8, ocrWord9);
+	List<OcrWordEntity> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3, ocrWord4, ocrWord5, ocrWord6, ocrWord7, ocrWord8, ocrWord9);
 
-	List<OcrWord> expected = Arrays.asList(ocrWord1, ocrWord3);
+	List<OcrWordEntity> expected = Arrays.asList(ocrWord1, ocrWord3);
 
 	toBeInserted.forEach(ocrWord -> testClass.addOcrWord(ocrWord));
 
 	// when
-	Collection<OcrWordDtoImpl> results = testClass.getWords(1, 1);
+	Collection<OcrWordOutputDto> results = testClass.getWords(1, 1);
 
 	// then
 	assertEquals(expected, results);
@@ -392,17 +392,17 @@ class OcrDataStoreServiceImplIntegrationTest {
     @Test
     void testGetWordCount() {
 	// given
-	OcrWord ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWord ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWord ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
-	OcrWord ocrWord4 = getOcrWord(1, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWord ocrWord5 = getOcrWord(1, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWord ocrWord6 = getOcrWord(1, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
-	OcrWord ocrWord7 = getOcrWord(2, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWord ocrWord8 = getOcrWord(2, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWord ocrWord9 = getOcrWord(2, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	OcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	OcrWordEntity ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	OcrWordEntity ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	OcrWordEntity ocrWord4 = getOcrWord(1, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	OcrWordEntity ocrWord5 = getOcrWord(1, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	OcrWordEntity ocrWord6 = getOcrWord(1, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	OcrWordEntity ocrWord7 = getOcrWord(2, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	OcrWordEntity ocrWord8 = getOcrWord(2, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	OcrWordEntity ocrWord9 = getOcrWord(2, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 
-	List<OcrWord> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3, ocrWord4, ocrWord5, ocrWord6, ocrWord7, ocrWord8, ocrWord9);
+	List<OcrWordEntity> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3, ocrWord4, ocrWord5, ocrWord6, ocrWord7, ocrWord8, ocrWord9);
 
 	toBeInserted.forEach(ocrWord -> testClass.addOcrWord(ocrWord));
 
@@ -413,16 +413,16 @@ class OcrDataStoreServiceImplIntegrationTest {
 	assertEquals(2, result);
     }
 
-    private RowMapper<OcrWord> ocrWordMapper() {
+    private RowMapper<OcrWordEntity> ocrWordMapper() {
 	return (ResultSet res, int rowNum) -> {
-	    OcrWord ocrWord =
+	    OcrWordEntity ocrWord =
 		    getOcrWord(1, 1, res.getInt("x1"), res.getInt("y1"), res.getInt("x2"), res.getInt("y2"), res.getFloat("confidence"), res.getString("raw_text"), res.getInt("word_sequence_id"));
 	    return ocrWord;
 	};
     }
 
-    private OcrWord getOcrWord(int bookId, int pageImageId, int x1, int y1, int x2, int y2, float confidence, String rawText, int wordSequenceId) {
-	OcrWord ocrWord = new OcrWord();
+    private OcrWordEntity getOcrWord(int bookId, int pageImageId, int x1, int y1, int x2, int y2, float confidence, String rawText, int wordSequenceId) {
+	OcrWordEntity ocrWord = new OcrWordEntity();
 	ocrWord.setX1(x1);
 	ocrWord.setY1(y1);
 	ocrWord.setX2(x2);

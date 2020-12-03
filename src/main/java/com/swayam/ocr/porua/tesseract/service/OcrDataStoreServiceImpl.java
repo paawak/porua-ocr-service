@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWord;
-import com.swayam.ocr.porua.tesseract.model.OcrWord;
+import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
@@ -21,7 +21,7 @@ import com.swayam.ocr.porua.tesseract.repo.BookRepository;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepository;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepository;
 import com.swayam.ocr.porua.tesseract.repo.PageImageRepository;
-import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordDtoImpl;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 
 @Service
 public class OcrDataStoreServiceImpl implements OcrDataStoreService {
@@ -79,10 +79,10 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
     }
 
     @Override
-    public Collection<OcrWordDtoImpl> getWords(long bookId, long pageImageId) {
-	Collection<OcrWord> entities = ocrWordRepository.findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
+    public Collection<OcrWordOutputDto> getWords(long bookId, long pageImageId) {
+	Collection<OcrWordEntity> entities = ocrWordRepository.findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
 	return entities.stream().map(entity -> {
-	    OcrWordDtoImpl dto = new OcrWordDtoImpl();
+	    OcrWordOutputDto dto = new OcrWordOutputDto();
 	    BeanUtils.copyProperties(entity, dto);
 	    List<CorrectedWord> correctedWords = entity.getCorrectedWords();
 	    if (correctedWords.size() > 0) {
@@ -93,7 +93,7 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
     }
 
     @Override
-    public OcrWord getWord(OcrWordId ocrWordId) {
+    public OcrWordEntity getWord(OcrWordId ocrWordId) {
 	return ocrWordRepository.findByOcrWordId(ocrWordId).get();
     }
 
@@ -104,7 +104,7 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
     }
 
     @Override
-    public OcrWord addOcrWord(OcrWord ocrWord) {
+    public OcrWordEntity addOcrWord(OcrWordEntity ocrWord) {
 	return ocrWordRepository.save(ocrWord);
     }
 
@@ -112,7 +112,7 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
     @Override
     public int updateCorrectTextInOcrWord(OcrWordId ocrWordId, String correctedText, UserDetails user) {
 
-	OcrWord ocrWord = getWord(ocrWordId);
+	OcrWordEntity ocrWord = getWord(ocrWordId);
 
 	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWordAndUser(ocrWord, user);
 

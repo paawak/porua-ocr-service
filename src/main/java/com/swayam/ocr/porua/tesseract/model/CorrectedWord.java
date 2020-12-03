@@ -10,14 +10,12 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrectionDto;
-
 import lombok.Data;
 
 @Entity
 @Table(name = "corrected_word")
 @Data
-public class CorrectedWord implements OcrCorrectionDto {
+public class CorrectedWord implements OcrWordWithCorrection {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,17 +27,12 @@ public class CorrectedWord implements OcrCorrectionDto {
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ocr_word_id")
-    private OcrWord ocrWord;
+    private OcrWordEntity ocrWord;
 
     @Column(name = "corrected_text")
     private String correctedText;
 
     @Column
     private boolean ignored;
-
-    @Override
-    public OcrWordId getOcrWordId() {
-	return ocrWord.getOcrWordId();
-    }
 
 }
