@@ -88,8 +88,9 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 	    List<CorrectedWord> correctedWords = entity.getCorrectedWords();
 	    if (correctedWords.size() > 0) {
 
-		boolean isIgnored = correctedWords.stream().filter(correctedWord -> (correctedWord.getUser().getRole() == UserRole.ADMIN_ROLE) || correctedWord.getUser().equals(userDetails))
-			.anyMatch(CorrectedWord::isIgnored);
+		boolean isIgnored =
+			correctedWords.stream().filter(correctedWord -> (correctedWord.getUser().getRole() == UserRole.ADMIN_ROLE) || (correctedWord.getUser().getId() == userDetails.getId()))
+				.anyMatch(CorrectedWord::isIgnored);
 
 		if (isIgnored) {
 		    dto.setIgnored(true);
@@ -102,7 +103,7 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 
 	    }
 	    return dto;
-	}).collect(Collectors.toList());
+	}).filter(correctedWord -> !correctedWord.isIgnored()).collect(Collectors.toList());
     }
 
     @Override
