@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
-import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrectionDto;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrectionDtoImpl;
 import com.swayam.ocr.porua.tesseract.service.OcrDataStoreService;
 
 @RestController
@@ -42,7 +42,7 @@ public class OCRCorrectionController {
     }
 
     @PostMapping(value = "/word", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Integer> applyCorrectionToOcrWords(@AuthenticationPrincipal Authentication authentication, @RequestBody final List<OcrCorrectionDto> ocrWordsForCorrection) {
+    public List<Integer> applyCorrectionToOcrWords(@AuthenticationPrincipal Authentication authentication, @RequestBody final List<OcrCorrectionDtoImpl> ocrWordsForCorrection) {
 	UserDetails userDetails = (UserDetails) authentication.getDetails();
 	return ocrWordsForCorrection.stream()
 		.map(ocrWordForCorrection -> ocrDataStoreService.updateCorrectTextInOcrWord(ocrWordForCorrection.getOcrWordId(), ocrWordForCorrection.getCorrectedText(), userDetails))

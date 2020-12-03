@@ -25,6 +25,7 @@ import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordDtoImpl;
 
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
 @ActiveProfiles("test")
@@ -382,7 +383,7 @@ class OcrDataStoreServiceImplIntegrationTest {
 	toBeInserted.forEach(ocrWord -> testClass.addOcrWord(ocrWord));
 
 	// when
-	Collection<OcrWord> results = testClass.getWords(1, 1);
+	Collection<OcrWordDtoImpl> results = testClass.getWords(1, 1);
 
 	// then
 	assertEquals(expected, results);

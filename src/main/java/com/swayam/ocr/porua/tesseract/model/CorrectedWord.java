@@ -10,14 +10,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrection;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrectionDto;
 
 import lombok.Data;
 
 @Entity
 @Table(name = "corrected_word")
 @Data
-public class CorrectedWord implements OcrCorrection {
+public class CorrectedWord implements OcrCorrectionDto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

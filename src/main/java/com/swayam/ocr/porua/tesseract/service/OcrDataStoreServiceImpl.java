@@ -8,6 +8,7 @@ import java.util.stream.StreamSupport;
 
 import javax.transaction.Transactional;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
@@ -20,6 +21,7 @@ import com.swayam.ocr.porua.tesseract.repo.BookRepository;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepository;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepository;
 import com.swayam.ocr.porua.tesseract.repo.PageImageRepository;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordDtoImpl;
 
 @Service
 public class OcrDataStoreServiceImpl implements OcrDataStoreService {
@@ -77,8 +79,17 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
     }
 
     @Override
-    public Collection<OcrWord> getWords(long bookId, long pageImageId) {
-	return ocrWordRepository.findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
+    public Collection<OcrWordDtoImpl> getWords(long bookId, long pageImageId) {
+	Collection<OcrWord> entities = ocrWordRepository.findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
+	return entities.stream().map(entity -> {
+	    OcrWordDtoImpl dto = new OcrWordDtoImpl();
+	    BeanUtils.copyProperties(entity, dto);
+	    List<CorrectedWord> correctedWords = entity.getCorrectedWords();
+	    if (correctedWords.size() > 0) {
+		dto.setCorrectedText(correctedWords.get(0).getCorrectedText());
+	    }
+	    return dto;
+	}).collect(Collectors.toList());
     }
 
     @Override

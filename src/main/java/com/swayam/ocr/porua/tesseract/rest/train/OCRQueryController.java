@@ -27,6 +27,7 @@ import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordDtoImpl;
 import com.swayam.ocr.porua.tesseract.service.FileSystemUtil;
 import com.swayam.ocr.porua.tesseract.service.OcrDataStoreService;
 import com.swayam.ocr.porua.tesseract.service.TesseractOcrWordAnalyser;
@@ -61,7 +62,7 @@ public class OCRQueryController {
     }
 
     @GetMapping(value = "/word", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Collection<OcrWord> getOcrWords(@RequestParam("bookId") final long bookId, @RequestParam("pageImageId") final long pageImageId) {
+    public Collection<OcrWordDtoImpl> getOcrWords(@RequestParam("bookId") final long bookId, @RequestParam("pageImageId") final long pageImageId) {
 	LOG.info("Retrieving OCR Words for Book Id {} and PageId {}", bookId, pageImageId);
 	return ocrDataStoreService.getWords(bookId, pageImageId);
     }

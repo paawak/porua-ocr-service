@@ -8,6 +8,7 @@ import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordDtoImpl;
 
 public interface OcrDataStoreService {
 
@@ -27,7 +28,7 @@ public interface OcrDataStoreService {
 
     int getWordCount(long bookId, long rawImageId);
 
-    Collection<OcrWord> getWords(long bookId, long pageImageId);
+    Collection<OcrWordDtoImpl> getWords(long bookId, long pageImageId);
 
     OcrWord addOcrWord(OcrWord rawOcrWord);
 

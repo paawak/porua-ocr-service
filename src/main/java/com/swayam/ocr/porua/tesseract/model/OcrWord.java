@@ -13,14 +13,14 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrection;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordDto;
 
 import lombok.Data;
 
 @Entity
 @Table(name = "ocr_word")
 @Data
-public class OcrWord implements OcrCorrection {
+public class OcrWord implements OcrWordDto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,11 +52,6 @@ public class OcrWord implements OcrCorrection {
 
     @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "ocrWord")
-    private List<CorrectedWord> ocrWords;
-
-    @Override
-    public String getCorrectedText() {
-	return ((ocrWords == null) || (ocrWords.isEmpty())) ? null : ocrWords.get(0).getCorrectedText();
-    }
+    private List<CorrectedWord> correctedWords;
 
 }
