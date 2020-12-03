@@ -6,18 +6,20 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.Param;
 
-import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
+import com.swayam.ocr.porua.tesseract.model.OcrWordTemplate;
 
-public interface OcrWordRepositoryTemplate extends CrudRepository<OcrWord, Long> {
+@NoRepositoryBean
+public interface OcrWordRepositoryTemplate<T extends OcrWordTemplate> extends CrudRepository<T, Long> {
 
-    Optional<OcrWord> findByOcrWordId(OcrWordId ocrWordId);
+    Optional<T> findByOcrWordId(OcrWordId ocrWordId);
 
     int countByOcrWordIdBookIdAndOcrWordIdPageImageId(long bookId, long pageImageId);
 
-    List<OcrWord> findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(long bookId, long pageImageId);
+    List<T> findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(long bookId, long pageImageId);
 
     @Modifying
     @Query("update OcrWord set ignored = TRUE where ocrWordId = :ocrWordId")
