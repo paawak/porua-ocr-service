@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 
-public interface OcrWordRepository extends CrudRepository<OcrWord, Long> {
+public interface OcrWordRepositoryTemplate extends CrudRepository<OcrWord, Long> {
 
     Optional<OcrWord> findByOcrWordId(OcrWordId ocrWordId);
 
