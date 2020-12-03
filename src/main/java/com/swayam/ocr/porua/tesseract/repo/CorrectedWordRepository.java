@@ -19,4 +19,8 @@ public interface CorrectedWordRepository extends CrudRepository<CorrectedWord, L
     @Query("update CorrectedWord set correctedText = :correctedText where ocrWord = :ocrWord and user = :user")
     int updateCorrectedText(@Param("ocrWord") OcrWordEntity ocrWord, @Param("correctedText") String correctedText, @Param("user") UserDetails user);
 
+    @Modifying
+    @Query("update CorrectedWord set ignored = TRUE where ocrWord = :ocrWord and user = :user")
+    int markAsIgnored(@Param("ocrWord") OcrWordEntity ocrWord, @Param("user") UserDetails user);
+
 }

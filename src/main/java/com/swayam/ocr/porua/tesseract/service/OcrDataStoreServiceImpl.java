@@ -17,6 +17,7 @@ import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
+import com.swayam.ocr.porua.tesseract.model.UserRole;
 import com.swayam.ocr.porua.tesseract.repo.BookRepository;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepository;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepository;
@@ -79,14 +80,26 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
     }
 
     @Override
-    public Collection<OcrWordOutputDto> getWords(long bookId, long pageImageId) {
+    public Collection<OcrWordOutputDto> getWords(long bookId, long pageImageId, UserDetails userDetails) {
 	Collection<OcrWordEntity> entities = ocrWordRepository.findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
 	return entities.stream().map(entity -> {
 	    OcrWordOutputDto dto = new OcrWordOutputDto();
 	    BeanUtils.copyProperties(entity, dto);
 	    List<CorrectedWord> correctedWords = entity.getCorrectedWords();
 	    if (correctedWords.size() > 0) {
-		dto.setCorrectedText(correctedWords.get(0).getCorrectedText());
+
+		boolean isIgnored = correctedWords.stream().filter(correctedWord -> (correctedWord.getUser().getRole() == UserRole.ADMIN_ROLE) || correctedWord.getUser().equals(userDetails))
+			.anyMatch(CorrectedWord::isIgnored);
+
+		if (isIgnored) {
+		    dto.setIgnored(true);
+		} else {
+		    Optional<CorrectedWord> correctedWordWithText = correctedWords.stream().filter(correctedWord -> correctedWord.getCorrectedText() != null).findFirst();
+		    if (correctedWordWithText.isPresent()) {
+			dto.setCorrectedText(correctedWordWithText.get().getCorrectedText());
+		    }
+		}
+
 	    }
 	    return dto;
 	}).collect(Collectors.toList());
@@ -99,8 +112,23 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 
     @Transactional
     @Override
-    public int markWordAsIgnored(OcrWordId ocrWordId) {
-	return ocrWordRepository.markAsIgnored(ocrWordId);
+    public int markWordAsIgnored(OcrWordId ocrWordId, UserDetails user) {
+	OcrWordEntity ocrWord = getWord(ocrWordId);
+
+	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWordAndUser(ocrWord, user);
+
+	if (existingCorrection.isPresent()) {
+	    return correctedWordRepository.markAsIgnored(ocrWord, user);
+	}
+
+	CorrectedWord correctedWord = new CorrectedWord();
+	correctedWord.setIgnored(true);
+	correctedWord.setOcrWord(ocrWord);
+	correctedWord.setUser(user);
+
+	correctedWordRepository.save(correctedWord);
+
+	return 1;
     }
 
     @Override
@@ -117,8 +145,7 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWordAndUser(ocrWord, user);
 
 	if (existingCorrection.isPresent()) {
-	    correctedWordRepository.updateCorrectedText(ocrWord, correctedText, user);
-	    return 1;
+	    return correctedWordRepository.updateCorrectedText(ocrWord, correctedText, user);
 	}
 
 	CorrectedWord correctedWord = new CorrectedWord();
@@ -130,11 +157,6 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 	correctedWordRepository.save(correctedWord);
 
 	return 1;
-    }
-
-    @Override
-    public void removeWord(OcrWordId ocrWordId) {
-	ocrWordRepository.deleteByOcrWordId(ocrWordId);
     }
 
     @Transactional

@@ -322,28 +322,6 @@ class OcrDataStoreServiceImplIntegrationTest {
     }
 
     @Test
-    void testRemoveWord() {
-	// given
-	OcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWordEntity ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWordEntity ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
-
-	List<OcrWordEntity> expected = Arrays.asList(ocrWord1, ocrWord3);
-
-	testClass.addOcrWord(ocrWord1);
-	testClass.addOcrWord(ocrWord2);
-	testClass.addOcrWord(ocrWord3);
-
-	// when
-	testClass.removeWord(new OcrWordId(1, 1, 2));
-
-	// then
-	List<OcrWordEntity> results = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
-
-	assertEquals(expected, results);
-    }
-
-    @Test
     void testMarkWordAsIgnored() {
 	// given
 	OcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
@@ -355,7 +333,7 @@ class OcrDataStoreServiceImplIntegrationTest {
 	testClass.addOcrWord(ocrWord3);
 
 	// when
-	int result = testClass.markWordAsIgnored(new OcrWordId(1, 1, 2));
+	int result = testClass.markWordAsIgnored(new OcrWordId(1, 1, 2), new UserDetails());
 
 	// then
 	assertEquals(1, result);
@@ -383,7 +361,7 @@ class OcrDataStoreServiceImplIntegrationTest {
 	toBeInserted.forEach(ocrWord -> testClass.addOcrWord(ocrWord));
 
 	// when
-	Collection<OcrWordOutputDto> results = testClass.getWords(1, 1);
+	Collection<OcrWordOutputDto> results = testClass.getWords(1, 1, new UserDetails());
 
 	// then
 	assertEquals(expected, results);

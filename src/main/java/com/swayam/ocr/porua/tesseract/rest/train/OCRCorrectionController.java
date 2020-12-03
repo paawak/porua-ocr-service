@@ -50,8 +50,9 @@ public class OCRCorrectionController {
     }
 
     @PostMapping(value = "/word/ignore", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Integer> markOcrWordAsIgnored(@RequestBody final List<OcrWordId> wordsToIgnore) {
-	return wordsToIgnore.stream().map(ocrDataStoreService::markWordAsIgnored).collect(Collectors.toUnmodifiableList());
+    public List<Integer> markOcrWordAsIgnored(@AuthenticationPrincipal Authentication authentication, @RequestBody final List<OcrWordId> wordsToIgnore) {
+	UserDetails userDetails = (UserDetails) authentication.getDetails();
+	return wordsToIgnore.stream().map(ocrWordId -> ocrDataStoreService.markWordAsIgnored(ocrWordId, userDetails)).collect(Collectors.toUnmodifiableList());
     }
 
 }

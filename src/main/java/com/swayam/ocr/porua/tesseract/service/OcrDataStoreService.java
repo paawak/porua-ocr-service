@@ -28,7 +28,7 @@ public interface OcrDataStoreService {
 
     int getWordCount(long bookId, long rawImageId);
 
-    Collection<OcrWordOutputDto> getWords(long bookId, long pageImageId);
+    Collection<OcrWordOutputDto> getWords(long bookId, long pageImageId, UserDetails userDetails);
 
     OcrWordEntity addOcrWord(OcrWordEntity rawOcrWord);
 
@@ -36,9 +36,7 @@ public interface OcrDataStoreService {
 
     OcrWordEntity getWord(OcrWordId ocrWordId);
 
-    void removeWord(OcrWordId ocrWordId);
-
-    int markWordAsIgnored(OcrWordId ocrWordId);
+    int markWordAsIgnored(OcrWordId ocrWordId, UserDetails user);
 
     int markPageAsIgnored(long pageImageId);
 

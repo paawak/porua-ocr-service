@@ -17,6 +17,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +29,7 @@ import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
+import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 import com.swayam.ocr.porua.tesseract.service.FileSystemUtil;
 import com.swayam.ocr.porua.tesseract.service.OcrDataStoreService;
@@ -62,9 +65,11 @@ public class OCRQueryController {
     }
 
     @GetMapping(value = "/word", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Collection<OcrWordOutputDto> getOcrWords(@RequestParam("bookId") final long bookId, @RequestParam("pageImageId") final long pageImageId) {
+    public Collection<OcrWordOutputDto> getOcrWords(@AuthenticationPrincipal Authentication authentication, @RequestParam("bookId") final long bookId,
+	    @RequestParam("pageImageId") final long pageImageId) {
+	UserDetails userDetails = (UserDetails) authentication.getDetails();
 	LOG.info("Retrieving OCR Words for Book Id {} and PageId {}", bookId, pageImageId);
-	return ocrDataStoreService.getWords(bookId, pageImageId);
+	return ocrDataStoreService.getWords(bookId, pageImageId, userDetails);
     }
 
     @GetMapping(value = "/word/image")
