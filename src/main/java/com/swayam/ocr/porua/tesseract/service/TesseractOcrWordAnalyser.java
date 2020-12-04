@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import com.swayam.ocr.porua.tesseract.model.Language;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
+import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 
 import lombok.Value;
@@ -153,7 +154,8 @@ public class TesseractOcrWordAnalyser {
 	    int firstWordSequence = wordSequenceNumbers.get().min().getAsInt();
 	    int lastWordSequence = wordSequenceNumbers.get().max().getAsInt();
 
-	    Function<Integer, OcrWordEntity> findWordFromSequenceNumber = sequenceNumber -> ocrWords.get().filter(ocrWord -> ocrWord.getOcrWordId().getWordSequenceId() == sequenceNumber).findAny().get();
+	    Function<Integer, OcrWordEntity> findWordFromSequenceNumber =
+		    sequenceNumber -> ocrWords.get().filter(ocrWord -> ocrWord.getOcrWordId().getWordSequenceId() == sequenceNumber).findAny().get();
 
 	    OcrWordEntity firstWord = findWordFromSequenceNumber.apply(firstWordSequence);
 	    OcrWordEntity lastWord = findWordFromSequenceNumber.apply(lastWordSequence);
@@ -238,7 +240,7 @@ public class TesseractOcrWordAnalyser {
 
     }
 
-    public static Rectangle getWordArea(OcrWordEntity ocrWord) {
+    public static Rectangle getWordArea(OcrWordEntityTemplate ocrWord) {
 	return getWordArea(ocrWord.getX1(), ocrWord.getY1(), ocrWord.getX2(), ocrWord.getY2());
     }
 

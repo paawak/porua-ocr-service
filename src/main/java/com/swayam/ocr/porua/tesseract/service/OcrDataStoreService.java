@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
-import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
+import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
@@ -30,11 +30,11 @@ public interface OcrDataStoreService {
 
     Collection<OcrWordOutputDto> getWords(long bookId, long pageImageId, UserDetails userDetails);
 
-    OcrWordEntity addOcrWord(OcrWordEntity rawOcrWord);
+    OcrWordEntityTemplate addOcrWord(OcrWordEntityTemplate rawOcrWord);
 
     int updateCorrectTextInOcrWord(OcrWordId ocrWordId, String correctedText, UserDetails user);
 
-    OcrWordEntity getWord(OcrWordId ocrWordId);
+    OcrWordEntityTemplate getWord(OcrWordId ocrWordId);
 
     int markWordAsIgnored(OcrWordId ocrWordId, UserDetails user);
 

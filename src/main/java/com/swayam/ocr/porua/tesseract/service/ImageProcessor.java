@@ -22,7 +22,7 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
-import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
+import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
 
@@ -80,12 +80,12 @@ public class ImageProcessor {
 
     }
 
-    public List<OcrWordEntity> submitPageForAnalysis(final long bookId, final int pageNumber, final String imageFileName, final Path savedImagePath) {
+    public List<OcrWordEntityTemplate> submitPageForAnalysis(final long bookId, final int pageNumber, final String imageFileName, final Path savedImagePath) {
 	Book book = ocrDataStoreService.getBook(bookId);
 	return submitPageForAnalysis(book, pageNumber, imageFileName, savedImagePath);
     }
 
-    private List<OcrWordEntity> submitPageForAnalysis(final Book book, final int pageNumber, final String imageFileName, final Path savedImagePath) {
+    private List<OcrWordEntityTemplate> submitPageForAnalysis(final Book book, final int pageNumber, final String imageFileName, final Path savedImagePath) {
 	PageImage newPageImage = new PageImage();
 	newPageImage.setName(imageFileName);
 	newPageImage.setPageNumber(pageNumber);
