@@ -1,5 +1,9 @@
 package com.swayam.ocr.porua.tesseract.rest.train.dto;
 
+import java.util.Collections;
+import java.util.List;
+
+import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.OcrWordWithCorrection;
@@ -28,5 +32,10 @@ public class OcrWordOutputDto implements OcrWord, OcrWordWithCorrection {
     private String correctedText;
 
     private boolean ignored;
+
+    @Override
+    public List<? extends CorrectedWordEntityTemplate> getCorrectedWords() {
+	return Collections.emptyList();
+    }
 
 }

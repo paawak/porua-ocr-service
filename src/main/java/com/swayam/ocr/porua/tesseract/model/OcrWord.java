@@ -1,5 +1,7 @@
 package com.swayam.ocr.porua.tesseract.model;
 
+import java.util.List;
+
 public interface OcrWord {
 
     OcrWordId getOcrWordId();
@@ -17,5 +19,7 @@ public interface OcrWord {
     float getConfidence();
 
     Integer getLineNumber();
+
+    List<? extends CorrectedWordEntityTemplate> getCorrectedWords();
 
 }

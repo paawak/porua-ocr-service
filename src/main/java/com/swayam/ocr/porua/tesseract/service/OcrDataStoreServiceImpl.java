@@ -88,17 +88,17 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 	return entities.stream().map(entity -> {
 	    OcrWordOutputDto dto = new OcrWordOutputDto();
 	    BeanUtils.copyProperties(entity, dto);
-	    List<CorrectedWordEntity> correctedWords = entity.getCorrectedWords();
+	    List<? extends CorrectedWordEntityTemplate> correctedWords = entity.getCorrectedWords();
 	    if (correctedWords.size() > 0) {
 
 		boolean isIgnored =
 			correctedWords.stream().filter(correctedWord -> (correctedWord.getUser().getRole() == UserRole.ADMIN_ROLE) || (correctedWord.getUser().getId() == userDetails.getId()))
-				.anyMatch(CorrectedWordEntity::isIgnored);
+				.anyMatch(CorrectedWordEntityTemplate::isIgnored);
 
 		if (isIgnored) {
 		    dto.setIgnored(true);
 		} else {
-		    Optional<CorrectedWordEntity> correctedWordWithText = correctedWords.stream().filter(correctedWord -> correctedWord.getCorrectedText() != null).findFirst();
+		    Optional<? extends CorrectedWordEntityTemplate> correctedWordWithText = correctedWords.stream().filter(correctedWord -> correctedWord.getCorrectedText() != null).findFirst();
 		    if (correctedWordWithText.isPresent()) {
 			dto.setCorrectedText(correctedWordWithText.get().getCorrectedText());
 		    }
