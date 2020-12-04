@@ -36,7 +36,7 @@ import com.swayam.ocr.porua.tesseract.repo.UserDetailsRepository;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private static final String OCR_TRAIN_QUERY_WORD_IMAGE = "/ocr/train/query/word/image";
-    private static final String[] URLS_TO_ALLOW_WITHOUT_AUTH = { "/v2/api-docs", "/configuration/**", "/swagger-ui.html", "/swagger*/**", "/webjars/**", "/ocr/train/user/register" };
+    private static final String[] URLS_TO_ALLOW_WITHOUT_AUTH = { "/v2/api-docs", "/configuration/**", "/swagger-ui.html", "/swagger*/**", "/webjars/**", "/ocr/train/user/register", "/actuator/**" };
 
     @Autowired
     private UserDetailsRepository userDetailsRepository;
