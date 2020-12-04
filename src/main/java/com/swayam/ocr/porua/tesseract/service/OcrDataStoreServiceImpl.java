@@ -12,7 +12,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
-import com.swayam.ocr.porua.tesseract.model.CorrectedWord;
+import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntity;
+import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
@@ -20,7 +21,7 @@ import com.swayam.ocr.porua.tesseract.model.PageImage;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.model.UserRole;
 import com.swayam.ocr.porua.tesseract.repo.BookRepository;
-import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepository;
+import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.repo.PageImageRepository;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
@@ -31,10 +32,10 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
     private final BookRepository bookRepository;
     private final PageImageRepository pageImageRepository;
     private final OcrWordRepositoryTemplate ocrWordRepository;
-    private final CorrectedWordRepository correctedWordRepository;
+    private final CorrectedWordRepositoryTemplate correctedWordRepository;
 
     public OcrDataStoreServiceImpl(BookRepository bookRepository, PageImageRepository pageImageRepository, OcrWordRepositoryTemplate ocrWordRepository,
-	    CorrectedWordRepository correctedWordRepository) {
+	    CorrectedWordRepositoryTemplate correctedWordRepository) {
 	this.bookRepository = bookRepository;
 	this.pageImageRepository = pageImageRepository;
 	this.ocrWordRepository = ocrWordRepository;
@@ -87,17 +88,17 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 	return entities.stream().map(entity -> {
 	    OcrWordOutputDto dto = new OcrWordOutputDto();
 	    BeanUtils.copyProperties(entity, dto);
-	    List<CorrectedWord> correctedWords = entity.getCorrectedWords();
+	    List<CorrectedWordEntity> correctedWords = entity.getCorrectedWords();
 	    if (correctedWords.size() > 0) {
 
 		boolean isIgnored =
 			correctedWords.stream().filter(correctedWord -> (correctedWord.getUser().getRole() == UserRole.ADMIN_ROLE) || (correctedWord.getUser().getId() == userDetails.getId()))
-				.anyMatch(CorrectedWord::isIgnored);
+				.anyMatch(CorrectedWordEntity::isIgnored);
 
 		if (isIgnored) {
 		    dto.setIgnored(true);
 		} else {
-		    Optional<CorrectedWord> correctedWordWithText = correctedWords.stream().filter(correctedWord -> correctedWord.getCorrectedText() != null).findFirst();
+		    Optional<CorrectedWordEntity> correctedWordWithText = correctedWords.stream().filter(correctedWord -> correctedWord.getCorrectedText() != null).findFirst();
 		    if (correctedWordWithText.isPresent()) {
 			dto.setCorrectedText(correctedWordWithText.get().getCorrectedText());
 		    }
@@ -118,13 +119,13 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
     public int markWordAsIgnored(OcrWordId ocrWordId, UserDetails user) {
 	OcrWordEntityTemplate ocrWord = getWord(ocrWordId);
 
-	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWordAndUser((OcrWordEntity) ocrWord, user);
+	Optional<CorrectedWordEntityTemplate> existingCorrection = correctedWordRepository.findByOcrWordAndUser((OcrWordEntity) ocrWord, user);
 
 	if (existingCorrection.isPresent()) {
 	    return correctedWordRepository.markAsIgnored((OcrWordEntity) ocrWord, user);
 	}
 
-	CorrectedWord correctedWord = new CorrectedWord();
+	CorrectedWordEntity correctedWord = new CorrectedWordEntity();
 	correctedWord.setIgnored(true);
 	correctedWord.setOcrWord((OcrWordEntity) ocrWord);
 	correctedWord.setUser(user);
@@ -145,13 +146,13 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 
 	OcrWordEntityTemplate ocrWord = getWord(ocrWordId);
 
-	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWordAndUser((OcrWordEntity) ocrWord, user);
+	Optional<CorrectedWordEntityTemplate> existingCorrection = correctedWordRepository.findByOcrWordAndUser((OcrWordEntity) ocrWord, user);
 
 	if (existingCorrection.isPresent()) {
 	    return correctedWordRepository.updateCorrectedText((OcrWordEntity) ocrWord, correctedText, user);
 	}
 
-	CorrectedWord correctedWord = new CorrectedWord();
+	CorrectedWordEntity correctedWord = new CorrectedWordEntity();
 	correctedWord.setCorrectedText(correctedText);
 	correctedWord.setIgnored(false);
 	correctedWord.setOcrWord((OcrWordEntity) ocrWord);

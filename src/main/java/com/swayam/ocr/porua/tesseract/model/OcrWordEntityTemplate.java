@@ -49,6 +49,6 @@ public abstract class OcrWordEntityTemplate implements OcrWord {
 
     @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "ocrWord")
-    private List<CorrectedWord> correctedWords;
+    private List<CorrectedWordEntity> correctedWords;
 
 }
