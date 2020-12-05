@@ -67,14 +67,14 @@ public class OcrWordServiceImpl implements OcrWordService {
     }
 
     @Override
-    public OcrWordEntityTemplate getWord(OcrWordId ocrWordId) {
+    public OcrWord getWord(OcrWordId ocrWordId) {
 	return ocrWordRepository.findByOcrWordId(ocrWordId).get();
     }
 
     @Transactional
     @Override
     public int markWordAsIgnored(OcrWordId ocrWordId, UserDetails user) {
-	OcrWordEntityTemplate ocrWord = getWord(ocrWordId);
+	OcrWord ocrWord = getWord(ocrWordId);
 
 	Optional<OcrWordWithCorrection> existingCorrection = correctedWordRepository.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
@@ -82,29 +82,21 @@ public class OcrWordServiceImpl implements OcrWordService {
 	    return correctedWordRepository.markAsIgnored(ocrWord.getId(), user);
 	}
 
-	CorrectedWordEntity correctedWord = new CorrectedWordEntity();
-	correctedWord.setIgnored(true);
-	correctedWord.setOcrWordId(ocrWord.getId());
-	correctedWord.setUser(user);
-
-	correctedWordRepository.save(correctedWord);
+	correctedWordRepository.save(toEntity(Optional.empty(), ocrWord.getId(), user));
 
 	return 1;
     }
 
     @Override
     public OcrWord addOcrWord(OcrWord ocrWord) {
-	// TODO:: make this into a proxy
-	OcrWordEntity entity = new OcrWordEntity();
-	BeanUtils.copyProperties(ocrWord, entity);
-	return ocrWordRepository.save(entity);
+	return ocrWordRepository.save(toEntity(ocrWord));
     }
 
     @Transactional
     @Override
     public int updateCorrectTextInOcrWord(OcrWordId ocrWordId, String correctedText, UserDetails user) {
 
-	OcrWordEntityTemplate ocrWord = getWord(ocrWordId);
+	OcrWord ocrWord = getWord(ocrWordId);
 
 	Optional<OcrWordWithCorrection> existingCorrection = correctedWordRepository.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
@@ -112,15 +104,32 @@ public class OcrWordServiceImpl implements OcrWordService {
 	    return correctedWordRepository.updateCorrectedText(ocrWord.getId(), correctedText, user);
 	}
 
-	CorrectedWordEntity correctedWord = new CorrectedWordEntity();
-	correctedWord.setCorrectedText(correctedText);
-	correctedWord.setIgnored(false);
-	correctedWord.setOcrWordId(ocrWord.getId());
-	correctedWord.setUser(user);
-
-	correctedWordRepository.save(correctedWord);
+	correctedWordRepository.save(toEntity(Optional.of(correctedText), ocrWord.getId(), user));
 
 	return 1;
+    }
+
+    private OcrWordEntity toEntity(OcrWord ocrWord) {
+	// TODO:: make this into a proxy
+	OcrWordEntity entity = new OcrWordEntity();
+	BeanUtils.copyProperties(ocrWord, entity);
+	return entity;
+    }
+
+    private CorrectedWordEntity toEntity(Optional<String> correctedText, long ocrWordId, UserDetails user) {
+	CorrectedWordEntityTemplate correctedWord = new CorrectedWordEntityTemplate();
+	if (correctedText.isPresent()) {
+	    correctedWord.setCorrectedText(correctedText.get());
+	    correctedWord.setIgnored(false);
+	} else {
+	    correctedWord.setIgnored(true);
+	}
+	correctedWord.setOcrWordId(ocrWordId);
+	correctedWord.setUser(user);
+	// TODO:: make this into a proxy
+	CorrectedWordEntity entity = new CorrectedWordEntity();
+	BeanUtils.copyProperties(correctedWord, entity);
+	return entity;
     }
 
 }

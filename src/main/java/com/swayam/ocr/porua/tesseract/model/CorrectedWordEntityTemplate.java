@@ -13,7 +13,7 @@ import lombok.Data;
 
 @MappedSuperclass
 @Data
-public abstract class CorrectedWordEntityTemplate implements OcrWordWithCorrection {
+public class CorrectedWordEntityTemplate implements OcrWordWithCorrection {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

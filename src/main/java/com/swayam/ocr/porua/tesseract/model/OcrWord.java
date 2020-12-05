@@ -4,6 +4,8 @@ import java.util.List;
 
 public interface OcrWord {
 
+    long getId();
+
     OcrWordId getOcrWordId();
 
     String getRawText();

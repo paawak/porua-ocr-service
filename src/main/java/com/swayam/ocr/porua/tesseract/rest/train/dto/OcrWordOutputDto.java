@@ -13,6 +13,8 @@ import lombok.Data;
 @Data
 public class OcrWordOutputDto implements OcrWord, OcrWordWithCorrection {
 
+    private long id;
+
     private OcrWordId ocrWordId;
 
     private String rawText;
