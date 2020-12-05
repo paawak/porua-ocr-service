@@ -20,7 +20,7 @@ import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.model.UserRole;
 import com.swayam.ocr.porua.tesseract.repo.BookRepository;
-import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepository;
+import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepository;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 
@@ -77,14 +77,14 @@ public class OcrWordServiceImpl implements OcrWordService {
     public int markWordAsIgnored(OcrWordId ocrWordId, UserDetails user) {
 	OcrWord ocrWord = getWord(ocrWordId);
 
-	CorrectedWordRepository correctedWordRepository = getCorrectedWordRepository(ocrWordId.getBookId());
-	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWordIdAndUser(ocrWord.getId(), user);
+	CorrectedWordRepositoryTemplate CorrectedWordRepositoryTemplate = getCorrectedWordRepositoryTemplate(ocrWordId.getBookId());
+	Optional<CorrectedWord> existingCorrection = CorrectedWordRepositoryTemplate.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
 	if (existingCorrection.isPresent()) {
-	    return correctedWordRepository.markAsIgnored(ocrWord.getId(), user);
+	    return CorrectedWordRepositoryTemplate.markAsIgnored(ocrWord.getId(), user);
 	}
 
-	correctedWordRepository.save(toEntity(Optional.empty(), ocrWord.getId(), user));
+	CorrectedWordRepositoryTemplate.save(toEntity(Optional.empty(), ocrWord.getId(), user));
 
 	return 1;
     }
@@ -100,14 +100,14 @@ public class OcrWordServiceImpl implements OcrWordService {
 
 	OcrWord ocrWord = getWord(ocrWordId);
 
-	CorrectedWordRepository correctedWordRepository = getCorrectedWordRepository(ocrWordId.getBookId());
-	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWordIdAndUser(ocrWord.getId(), user);
+	CorrectedWordRepositoryTemplate CorrectedWordRepositoryTemplate = getCorrectedWordRepositoryTemplate(ocrWordId.getBookId());
+	Optional<CorrectedWord> existingCorrection = CorrectedWordRepositoryTemplate.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
 	if (existingCorrection.isPresent()) {
-	    return correctedWordRepository.updateCorrectedText(ocrWord.getId(), correctedText, user);
+	    return CorrectedWordRepositoryTemplate.updateCorrectedText(ocrWord.getId(), correctedText, user);
 	}
 
-	correctedWordRepository.save(toEntity(Optional.of(correctedText), ocrWord.getId(), user));
+	CorrectedWordRepositoryTemplate.save(toEntity(Optional.of(correctedText), ocrWord.getId(), user));
 
 	return 1;
     }
@@ -118,10 +118,10 @@ public class OcrWordServiceImpl implements OcrWordService {
 	return applicationContext.getBean(OcrWordRepository.class);
     }
 
-    private CorrectedWordRepository getCorrectedWordRepository(long bookId) {
+    private CorrectedWordRepositoryTemplate getCorrectedWordRepositoryTemplate(long bookId) {
 	String beanName = bookRepository.findById(bookId).get().getBeanBaseName();
 	// TODO; find based on name
-	return applicationContext.getBean(CorrectedWordRepository.class);
+	return applicationContext.getBean(CorrectedWordRepositoryTemplate.class);
     }
 
     private OcrWordEntity toEntity(OcrWord ocrWord) {

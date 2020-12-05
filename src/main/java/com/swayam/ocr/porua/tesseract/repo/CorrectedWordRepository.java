@@ -7,18 +7,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
-import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntity;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWord;
+import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntity;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 
-public interface CorrectedWordRepository extends CrudRepository<CorrectedWordEntity, Long> {
+public interface CorrectedWordRepository extends CrudRepository<CorrectedWordEntity, Long>, CorrectedWordRepositoryTemplate {
 
+    @Override
     Optional<CorrectedWord> findByOcrWordIdAndUser(long ocrWordId, UserDetails user);
 
+    @Override
     @Modifying
     @Query("update CorrectedWordEntity set correctedText = :correctedText where ocrWordId = :ocrWordId and user = :user")
     int updateCorrectedText(@Param("ocrWordId") long ocrWordId, @Param("correctedText") String correctedText, @Param("user") UserDetails user);
 
+    @Override
     @Modifying
     @Query("update CorrectedWordEntity set ignored = TRUE where ocrWordId = :ocrWordId and user = :user")
     int markAsIgnored(@Param("ocrWordId") long ocrWordId, @Param("user") UserDetails user);
