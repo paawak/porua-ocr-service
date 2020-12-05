@@ -4,77 +4,32 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import javax.transaction.Transactional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntity;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
-import com.swayam.ocr.porua.tesseract.model.PageImage;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.model.UserRole;
-import com.swayam.ocr.porua.tesseract.repo.BookRepository;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepositoryTemplate;
-import com.swayam.ocr.porua.tesseract.repo.PageImageRepository;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 
 @Service
-public class OcrDataStoreServiceImpl implements OcrDataStoreService {
+public class OcrWordServiceImpl implements OcrWordService {
 
-    private final BookRepository bookRepository;
-    private final PageImageRepository pageImageRepository;
     private final OcrWordRepositoryTemplate ocrWordRepository;
     private final CorrectedWordRepositoryTemplate correctedWordRepository;
 
-    public OcrDataStoreServiceImpl(BookRepository bookRepository, PageImageRepository pageImageRepository, OcrWordRepositoryTemplate ocrWordRepository,
-	    CorrectedWordRepositoryTemplate correctedWordRepository) {
-	this.bookRepository = bookRepository;
-	this.pageImageRepository = pageImageRepository;
+    public OcrWordServiceImpl(OcrWordRepositoryTemplate ocrWordRepository, CorrectedWordRepositoryTemplate correctedWordRepository) {
 	this.ocrWordRepository = ocrWordRepository;
 	this.correctedWordRepository = correctedWordRepository;
-    }
-
-    @Override
-    public Book addBook(Book book) {
-	return bookRepository.save(book);
-    }
-
-    @Override
-    public List<Book> getBooks() {
-	return StreamSupport.stream(bookRepository.findAll().spliterator(), false).collect(Collectors.toUnmodifiableList());
-    }
-
-    @Override
-    public Book getBook(long bookId) {
-	return bookRepository.findById(bookId).get();
-    }
-
-    @Override
-    public PageImage addPageImage(PageImage pageImage) {
-	return pageImageRepository.save(pageImage);
-    }
-
-    @Override
-    public PageImage getPageImage(long pageImageId) {
-	return pageImageRepository.findById(pageImageId).get();
-    }
-
-    @Override
-    public int getPageCount(long bookId) {
-	return pageImageRepository.countByBookId(bookId);
-    }
-
-    @Override
-    public List<PageImage> getPages(long bookId) {
-	return pageImageRepository.findByBookIdAndIgnoredIsFalseAndCorrectionCompletedIsFalseOrderById(bookId);
     }
 
     @Override
@@ -161,18 +116,6 @@ public class OcrDataStoreServiceImpl implements OcrDataStoreService {
 	correctedWordRepository.save(correctedWord);
 
 	return 1;
-    }
-
-    @Transactional
-    @Override
-    public int markPageAsIgnored(long pageImageId) {
-	return pageImageRepository.markPageAsIgnored(pageImageId);
-    }
-
-    @Transactional
-    @Override
-    public int markPageAsCorrectionCompleted(long pageImageId) {
-	return pageImageRepository.markPageAsCorrectionCompleted(pageImageId);
     }
 
 }

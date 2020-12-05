@@ -32,11 +32,16 @@ public class ImageProcessor {
     private static final String IMAGE_TYPE = "png";
 
     private final TaskExecutor taskExecutor;
-    private final OcrDataStoreService ocrDataStoreService;
+    private final BookService bookService;
+    private final PageService pageService;
+    private final OcrWordService ocrDataStoreService;
     private final String tessDataDirectory;
 
-    public ImageProcessor(TaskExecutor taskExecutor, OcrDataStoreService ocrDataStoreService, @Value("${app.config.ocr.tesseract.tessdata-location}") String tessDataDirectory) {
+    public ImageProcessor(TaskExecutor taskExecutor, BookService bookService, PageService pageService, OcrWordService ocrDataStoreService,
+	    @Value("${app.config.ocr.tesseract.tessdata-location}") String tessDataDirectory) {
 	this.taskExecutor = taskExecutor;
+	this.bookService = bookService;
+	this.pageService = pageService;
 	this.ocrDataStoreService = ocrDataStoreService;
 	this.tessDataDirectory = tessDataDirectory;
     }
@@ -51,7 +56,7 @@ public class ImageProcessor {
 	}
 
 	String pageNameTemplate = fileName.substring(0, fileName.length() - 3) + "_%d." + IMAGE_TYPE;
-	Book book = ocrDataStoreService.getBook(bookId);
+	Book book = bookService.getBook(bookId);
 
 	AtomicInteger pageCount = new AtomicInteger(1);
 
@@ -81,7 +86,7 @@ public class ImageProcessor {
     }
 
     public List<OcrWordEntityTemplate> submitPageForAnalysis(final long bookId, final int pageNumber, final String imageFileName, final Path savedImagePath) {
-	Book book = ocrDataStoreService.getBook(bookId);
+	Book book = bookService.getBook(bookId);
 	return submitPageForAnalysis(book, pageNumber, imageFileName, savedImagePath);
     }
 
@@ -90,7 +95,7 @@ public class ImageProcessor {
 	newPageImage.setName(imageFileName);
 	newPageImage.setPageNumber(pageNumber);
 	newPageImage.setBook(book);
-	long imageFileId = ocrDataStoreService.addPageImage(newPageImage).getId();
+	long imageFileId = pageService.addPageImage(newPageImage).getId();
 
 	return new TesseractOcrWordAnalyser(savedImagePath, book.getLanguage(), tessDataDirectory).extractWordsFromImage((wordSequenceId) -> new OcrWordId(book.getId(), imageFileId, wordSequenceId))
 		.stream().map(rawText -> ocrDataStoreService.addOcrWord(rawText)).collect(Collectors.toUnmodifiableList());

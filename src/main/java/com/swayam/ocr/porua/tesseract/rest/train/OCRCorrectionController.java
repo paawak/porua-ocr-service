@@ -17,27 +17,30 @@ import org.springframework.web.bind.annotation.RestController;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrectionInputDto;
-import com.swayam.ocr.porua.tesseract.service.OcrDataStoreService;
+import com.swayam.ocr.porua.tesseract.service.OcrWordService;
+import com.swayam.ocr.porua.tesseract.service.PageService;
 
 @RestController
 @RequestMapping("/ocr/train/correction")
 public class OCRCorrectionController {
 
-    private final OcrDataStoreService ocrDataStoreService;
+    private final PageService pageService;
+    private final OcrWordService ocrDataStoreService;
 
-    public OCRCorrectionController(OcrDataStoreService ocrDataStoreService) {
+    public OCRCorrectionController(PageService pageService, OcrWordService ocrDataStoreService) {
+	this.pageService = pageService;
 	this.ocrDataStoreService = ocrDataStoreService;
     }
 
     @PutMapping(value = "/page/ignore/{pageImageId}")
     public ResponseEntity<Integer> markPageAsIgnored(@PathVariable("pageImageId") final long pageImageId) {
-	int rowsAffected = ocrDataStoreService.markPageAsIgnored(pageImageId);
+	int rowsAffected = pageService.markPageAsIgnored(pageImageId);
 	return ResponseEntity.ok(rowsAffected);
     }
 
     @PutMapping(value = "/page/complete/{pageImageId}")
     public ResponseEntity<Integer> markPageAsCorrectionCompleted(@PathVariable("pageImageId") final long pageImageId) {
-	int rowsAffected = ocrDataStoreService.markPageAsCorrectionCompleted(pageImageId);
+	int rowsAffected = pageService.markPageAsCorrectionCompleted(pageImageId);
 	return ResponseEntity.ok(rowsAffected);
     }
 
