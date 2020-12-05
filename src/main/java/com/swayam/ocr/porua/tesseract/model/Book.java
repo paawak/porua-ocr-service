@@ -23,6 +23,9 @@ public class Book {
     @Column
     private String name;
 
+    @Column(name = "bean_base_name")
+    private String beanBaseName;
+
     @Column
     @Enumerated(EnumType.STRING)
     private Language language;

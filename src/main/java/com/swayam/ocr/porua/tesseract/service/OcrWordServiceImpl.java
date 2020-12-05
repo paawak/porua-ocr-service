@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import com.swayam.ocr.porua.tesseract.model.CorrectedWord;
@@ -18,6 +19,7 @@ import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.model.UserRole;
+import com.swayam.ocr.porua.tesseract.repo.BookRepository;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepository;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepository;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
@@ -25,22 +27,22 @@ import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 @Service
 public class OcrWordServiceImpl implements OcrWordService {
 
-    private final OcrWordRepository ocrWordRepository;
-    private final CorrectedWordRepository correctedWordRepository;
+    private final BookRepository bookRepository;
+    private final ApplicationContext applicationContext;
 
-    public OcrWordServiceImpl(OcrWordRepository ocrWordRepository, CorrectedWordRepository correctedWordRepository) {
-	this.ocrWordRepository = ocrWordRepository;
-	this.correctedWordRepository = correctedWordRepository;
+    public OcrWordServiceImpl(BookRepository bookRepository, ApplicationContext applicationContext) {
+	this.bookRepository = bookRepository;
+	this.applicationContext = applicationContext;
     }
 
     @Override
     public int getWordCount(long bookId, long pageImageId) {
-	return ocrWordRepository.countByOcrWordIdBookIdAndOcrWordIdPageImageId(bookId, pageImageId);
+	return getOcrWordRepository(bookId).countByOcrWordIdBookIdAndOcrWordIdPageImageId(bookId, pageImageId);
     }
 
     @Override
     public Collection<OcrWordOutputDto> getWords(long bookId, long pageImageId, UserDetails userDetails) {
-	Collection<OcrWord> entities = ocrWordRepository.findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
+	Collection<OcrWord> entities = getOcrWordRepository(bookId).findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
 	return entities.stream().map(entity -> {
 	    OcrWordOutputDto dto = new OcrWordOutputDto();
 	    BeanUtils.copyProperties(entity, dto);
@@ -67,7 +69,7 @@ public class OcrWordServiceImpl implements OcrWordService {
 
     @Override
     public OcrWord getWord(OcrWordId ocrWordId) {
-	return ocrWordRepository.findByOcrWordId(ocrWordId).get();
+	return getOcrWordRepository(ocrWordId.getBookId()).findByOcrWordId(ocrWordId).get();
     }
 
     @Transactional
@@ -75,6 +77,7 @@ public class OcrWordServiceImpl implements OcrWordService {
     public int markWordAsIgnored(OcrWordId ocrWordId, UserDetails user) {
 	OcrWord ocrWord = getWord(ocrWordId);
 
+	CorrectedWordRepository correctedWordRepository = getCorrectedWordRepository(ocrWordId.getBookId());
 	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
 	if (existingCorrection.isPresent()) {
@@ -88,7 +91,7 @@ public class OcrWordServiceImpl implements OcrWordService {
 
     @Override
     public OcrWord addOcrWord(OcrWord ocrWord) {
-	return ocrWordRepository.save(toEntity(ocrWord));
+	return getOcrWordRepository(ocrWord.getOcrWordId().getBookId()).save(toEntity(ocrWord));
     }
 
     @Transactional
@@ -97,6 +100,7 @@ public class OcrWordServiceImpl implements OcrWordService {
 
 	OcrWord ocrWord = getWord(ocrWordId);
 
+	CorrectedWordRepository correctedWordRepository = getCorrectedWordRepository(ocrWordId.getBookId());
 	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
 	if (existingCorrection.isPresent()) {
@@ -106,6 +110,18 @@ public class OcrWordServiceImpl implements OcrWordService {
 	correctedWordRepository.save(toEntity(Optional.of(correctedText), ocrWord.getId(), user));
 
 	return 1;
+    }
+
+    private OcrWordRepository getOcrWordRepository(long bookId) {
+	String beanName = bookRepository.findById(bookId).get().getBeanBaseName();
+	// TODO; find based on name
+	return applicationContext.getBean(OcrWordRepository.class);
+    }
+
+    private CorrectedWordRepository getCorrectedWordRepository(long bookId) {
+	String beanName = bookRepository.findById(bookId).get().getBeanBaseName();
+	// TODO; find based on name
+	return applicationContext.getBean(CorrectedWordRepository.class);
     }
 
     private OcrWordEntity toEntity(OcrWord ocrWord) {
