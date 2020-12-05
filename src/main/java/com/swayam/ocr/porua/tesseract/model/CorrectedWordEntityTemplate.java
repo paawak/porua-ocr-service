@@ -23,9 +23,8 @@ public abstract class CorrectedWordEntityTemplate implements OcrWordWithCorrecti
     @JoinColumn(name = "user_id")
     private UserDetails user;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "ocr_word_id")
-    private OcrWordEntity ocrWord;
+    @Column(name = "ocr_word_id")
+    private long ocrWordId;
 
     @Column(name = "corrected_text")
     private String correctedText;

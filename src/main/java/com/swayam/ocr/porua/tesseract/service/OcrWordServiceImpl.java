@@ -76,15 +76,15 @@ public class OcrWordServiceImpl implements OcrWordService {
     public int markWordAsIgnored(OcrWordId ocrWordId, UserDetails user) {
 	OcrWordEntityTemplate ocrWord = getWord(ocrWordId);
 
-	Optional<OcrWordWithCorrection> existingCorrection = correctedWordRepository.findByOcrWordAndUser((OcrWordEntity) ocrWord, user);
+	Optional<OcrWordWithCorrection> existingCorrection = correctedWordRepository.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
 	if (existingCorrection.isPresent()) {
-	    return correctedWordRepository.markAsIgnored((OcrWordEntity) ocrWord, user);
+	    return correctedWordRepository.markAsIgnored(ocrWord.getId(), user);
 	}
 
 	CorrectedWordEntity correctedWord = new CorrectedWordEntity();
 	correctedWord.setIgnored(true);
-	correctedWord.setOcrWord((OcrWordEntity) ocrWord);
+	correctedWord.setOcrWordId(ocrWord.getId());
 	correctedWord.setUser(user);
 
 	correctedWordRepository.save(correctedWord);
@@ -106,16 +106,16 @@ public class OcrWordServiceImpl implements OcrWordService {
 
 	OcrWordEntityTemplate ocrWord = getWord(ocrWordId);
 
-	Optional<OcrWordWithCorrection> existingCorrection = correctedWordRepository.findByOcrWordAndUser((OcrWordEntity) ocrWord, user);
+	Optional<OcrWordWithCorrection> existingCorrection = correctedWordRepository.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
 	if (existingCorrection.isPresent()) {
-	    return correctedWordRepository.updateCorrectedText((OcrWordEntity) ocrWord, correctedText, user);
+	    return correctedWordRepository.updateCorrectedText(ocrWord.getId(), correctedText, user);
 	}
 
 	CorrectedWordEntity correctedWord = new CorrectedWordEntity();
 	correctedWord.setCorrectedText(correctedText);
 	correctedWord.setIgnored(false);
-	correctedWord.setOcrWord((OcrWordEntity) ocrWord);
+	correctedWord.setOcrWordId(ocrWord.getId());
 	correctedWord.setUser(user);
 
 	correctedWordRepository.save(correctedWord);

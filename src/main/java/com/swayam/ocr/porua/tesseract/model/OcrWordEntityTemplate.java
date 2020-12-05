@@ -48,7 +48,7 @@ public class OcrWordEntityTemplate implements OcrWord {
     private Integer lineNumber;
 
     @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "ocrWord")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "ocrWordId")
     private List<CorrectedWordEntity> correctedWords;
 
 }
