@@ -16,6 +16,7 @@ import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
+import com.swayam.ocr.porua.tesseract.model.OcrWordWithCorrection;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.model.UserRole;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepository;
@@ -75,7 +76,7 @@ public class OcrWordServiceImpl implements OcrWordService {
     public int markWordAsIgnored(OcrWordId ocrWordId, UserDetails user) {
 	OcrWordEntityTemplate ocrWord = getWord(ocrWordId);
 
-	Optional<CorrectedWordEntityTemplate> existingCorrection = correctedWordRepository.findByOcrWordAndUser((OcrWordEntity) ocrWord, user);
+	Optional<OcrWordWithCorrection> existingCorrection = correctedWordRepository.findByOcrWordAndUser((OcrWordEntity) ocrWord, user);
 
 	if (existingCorrection.isPresent()) {
 	    return correctedWordRepository.markAsIgnored((OcrWordEntity) ocrWord, user);
@@ -105,7 +106,7 @@ public class OcrWordServiceImpl implements OcrWordService {
 
 	OcrWordEntityTemplate ocrWord = getWord(ocrWordId);
 
-	Optional<CorrectedWordEntityTemplate> existingCorrection = correctedWordRepository.findByOcrWordAndUser((OcrWordEntity) ocrWord, user);
+	Optional<OcrWordWithCorrection> existingCorrection = correctedWordRepository.findByOcrWordAndUser((OcrWordEntity) ocrWord, user);
 
 	if (existingCorrection.isPresent()) {
 	    return correctedWordRepository.updateCorrectedText((OcrWordEntity) ocrWord, correctedText, user);
