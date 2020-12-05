@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.swayam.ocr.porua.tesseract.model.Language;
-import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
+import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 
@@ -54,12 +54,12 @@ public class TesseractOcrWordAnalyser {
 	this.tessDataDirectory = tessDataDirectory;
     }
 
-    public List<OcrWordEntity> extractWordsFromImage(Function<Integer, OcrWordId> ocrWordIdGenerator) {
+    public List<OcrWord> extractWordsFromImage(Function<Integer, OcrWordId> ocrWordIdGenerator) {
 	LOGGER.info("Image file to analyse with Tesseract OCR: {}", imagePath);
 
 	LOGGER.info("Analyzing image file for words with language {} and TESSDATA {}", language.name(), tessDataDirectory);
 
-	List<OcrWordEntity> ocrWords = new ArrayList<>();
+	List<OcrWord> ocrWords = new ArrayList<>();
 
 	try (TessBaseAPI api = new TessBaseAPI();) {
 	    int returnCode = api.Init(tessDataDirectory, language.name());
@@ -95,7 +95,7 @@ public class TesseractOcrWordAnalyser {
 			throw new IllegalArgumentException("Could not find any rectangle here");
 		    }
 
-		    OcrWordEntity ocrWord = new OcrWordEntity();
+		    OcrWordEntityTemplate ocrWord = new OcrWordEntityTemplate();
 		    ocrWord.setX1(x1.get());
 		    ocrWord.setY1(y1.get());
 		    ocrWord.setX2(x2.get());
@@ -126,7 +126,7 @@ public class TesseractOcrWordAnalyser {
 	return ocrWords;
     }
 
-    public List<String> getBoxStrings(Map<Integer, String> correctTextLookupBySequenceNumber, Collection<OcrWordEntity> rawOcrWords) {
+    public List<String> getBoxStrings(Map<Integer, String> correctTextLookupBySequenceNumber, Collection<OcrWord> rawOcrWords) {
 	LOGGER.trace("words: {}", rawOcrWords);
 	ExtractedLineDetails extractedLineDetails = extractLinesFromImage();
 	List<RawOcrLine> lines = extractedLineDetails.lines;
@@ -135,7 +135,7 @@ public class TesseractOcrWordAnalyser {
 
 	Map<Integer, RawOcrLine> linesAsMap = lines.parallelStream().collect(Collectors.toMap(RawOcrLine::getLineNumber, Function.identity()));
 
-	Map<Integer, List<OcrWordEntity>> wordsGroupedByLineNumber = lines.parallelStream().collect(Collectors.toMap(RawOcrLine::getLineNumber, line -> {
+	Map<Integer, List<OcrWord>> wordsGroupedByLineNumber = lines.parallelStream().collect(Collectors.toMap(RawOcrLine::getLineNumber, line -> {
 	    return rawOcrWords.parallelStream().filter(rawOcrText -> {
 		Rectangle originalLineArea = getWordArea(line.getX1(), line.getY1(), line.getX2(), line.getY2());
 		int expandBy = 5;
@@ -148,17 +148,16 @@ public class TesseractOcrWordAnalyser {
 
 	return linesAsMap.keySet().stream().sorted().filter(lineNumber -> !wordsGroupedByLineNumber.get(lineNumber).isEmpty()).flatMap(lineNumber -> {
 
-	    Supplier<Stream<OcrWordEntity>> ocrWords = () -> wordsGroupedByLineNumber.get(lineNumber).parallelStream();
+	    Supplier<Stream<OcrWord>> ocrWords = () -> wordsGroupedByLineNumber.get(lineNumber).parallelStream();
 	    Supplier<IntStream> wordSequenceNumbers = () -> ocrWords.get().mapToInt(ocrWord -> ocrWord.getOcrWordId().getWordSequenceId());
 
 	    int firstWordSequence = wordSequenceNumbers.get().min().getAsInt();
 	    int lastWordSequence = wordSequenceNumbers.get().max().getAsInt();
 
-	    Function<Integer, OcrWordEntity> findWordFromSequenceNumber =
-		    sequenceNumber -> ocrWords.get().filter(ocrWord -> ocrWord.getOcrWordId().getWordSequenceId() == sequenceNumber).findAny().get();
+	    Function<Integer, OcrWord> findWordFromSequenceNumber = sequenceNumber -> ocrWords.get().filter(ocrWord -> ocrWord.getOcrWordId().getWordSequenceId() == sequenceNumber).findAny().get();
 
-	    OcrWordEntity firstWord = findWordFromSequenceNumber.apply(firstWordSequence);
-	    OcrWordEntity lastWord = findWordFromSequenceNumber.apply(lastWordSequence);
+	    OcrWord firstWord = findWordFromSequenceNumber.apply(firstWordSequence);
+	    OcrWord lastWord = findWordFromSequenceNumber.apply(lastWordSequence);
 
 	    int leftTopX = firstWord.getX1();
 	    int leftTopY = linesAsMap.get(lineNumber).getY1();
@@ -173,7 +172,7 @@ public class TesseractOcrWordAnalyser {
 
 	    String positionData = String.format(" %d %d %d %d 0", leftBottomX, leftBottomY, rightTopX, rightTopY);
 
-	    List<String> boxes = ocrWords.get().sorted((OcrWordEntity o1, OcrWordEntity o2) -> o1.getOcrWordId().getWordSequenceId() - o2.getOcrWordId().getWordSequenceId()).map(rawOcrText -> {
+	    List<String> boxes = ocrWords.get().sorted((OcrWord o1, OcrWord o2) -> o1.getOcrWordId().getWordSequenceId() - o2.getOcrWordId().getWordSequenceId()).map(rawOcrText -> {
 		String ocrText;
 		// lookup for corrected text
 		if (correctTextLookupBySequenceNumber.containsKey(rawOcrText.getOcrWordId().getWordSequenceId())) {
@@ -240,7 +239,7 @@ public class TesseractOcrWordAnalyser {
 
     }
 
-    public static Rectangle getWordArea(OcrWordEntityTemplate ocrWord) {
+    public static Rectangle getWordArea(OcrWord ocrWord) {
 	return getWordArea(ocrWord.getX1(), ocrWord.getY1(), ocrWord.getX2(), ocrWord.getY2());
     }
 

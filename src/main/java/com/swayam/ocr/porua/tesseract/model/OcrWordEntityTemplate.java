@@ -17,7 +17,7 @@ import lombok.Data;
 
 @MappedSuperclass
 @Data
-public abstract class OcrWordEntityTemplate implements OcrWord {
+public class OcrWordEntityTemplate implements OcrWord {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

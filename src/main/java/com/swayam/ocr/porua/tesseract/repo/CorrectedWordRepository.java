@@ -12,17 +12,14 @@ import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 
-public interface CorrectedWordRepository extends CrudRepository<CorrectedWordEntity, Long>, CorrectedWordRepositoryTemplate {
+public interface CorrectedWordRepository extends CrudRepository<CorrectedWordEntity, Long> {
 
-    @Override
     Optional<CorrectedWordEntityTemplate> findByOcrWordAndUser(OcrWordEntity ocrWord, UserDetails user);
 
-    @Override
     @Modifying
     @Query("update CorrectedWordEntity set correctedText = :correctedText where ocrWord = :ocrWord and user = :user")
     int updateCorrectedText(@Param("ocrWord") OcrWordEntity ocrWord, @Param("correctedText") String correctedText, @Param("user") UserDetails user);
 
-    @Override
     @Modifying
     @Query("update CorrectedWordEntity set ignored = TRUE where ocrWord = :ocrWord and user = :user")
     int markAsIgnored(@Param("ocrWord") OcrWordEntity ocrWord, @Param("user") UserDetails user);

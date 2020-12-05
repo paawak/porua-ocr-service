@@ -17,14 +17,15 @@ import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
-import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 
 @Service
 public class ImageProcessor {
@@ -85,12 +86,12 @@ public class ImageProcessor {
 
     }
 
-    public List<OcrWordEntityTemplate> submitPageForAnalysis(final long bookId, final int pageNumber, final String imageFileName, final Path savedImagePath) {
+    public List<OcrWordOutputDto> submitPageForAnalysis(final long bookId, final int pageNumber, final String imageFileName, final Path savedImagePath) {
 	Book book = bookService.getBook(bookId);
 	return submitPageForAnalysis(book, pageNumber, imageFileName, savedImagePath);
     }
 
-    private List<OcrWordEntityTemplate> submitPageForAnalysis(final Book book, final int pageNumber, final String imageFileName, final Path savedImagePath) {
+    private List<OcrWordOutputDto> submitPageForAnalysis(final Book book, final int pageNumber, final String imageFileName, final Path savedImagePath) {
 	PageImage newPageImage = new PageImage();
 	newPageImage.setName(imageFileName);
 	newPageImage.setPageNumber(pageNumber);
@@ -98,7 +99,11 @@ public class ImageProcessor {
 	long imageFileId = pageService.addPageImage(newPageImage).getId();
 
 	return new TesseractOcrWordAnalyser(savedImagePath, book.getLanguage(), tessDataDirectory).extractWordsFromImage((wordSequenceId) -> new OcrWordId(book.getId(), imageFileId, wordSequenceId))
-		.stream().map(rawText -> ocrDataStoreService.addOcrWord(rawText)).collect(Collectors.toUnmodifiableList());
+		.stream().map(rawText -> ocrDataStoreService.addOcrWord(rawText)).map(ocrWord -> {
+		    OcrWordOutputDto dto = new OcrWordOutputDto();
+		    BeanUtils.copyProperties(ocrWord, dto, "correctedWords");
+		    return dto;
+		}).collect(Collectors.toUnmodifiableList());
 
     }
 

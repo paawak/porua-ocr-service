@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
-import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
+import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
@@ -84,7 +84,7 @@ public class OCRQueryController {
 	String pageImageName = pageService.getPageImage(pageImageId).getName();
 	Path imagePath = fileSystemUtil.getImageSaveLocation(pageImageName);
 
-	OcrWordEntityTemplate ocrText = ocrDataStoreService.getWord(new OcrWordId(bookId, pageImageId, wordSequenceId));
+	OcrWord ocrText = ocrDataStoreService.getWord(new OcrWordId(bookId, pageImageId, wordSequenceId));
 	BufferedImage fullImage = ImageIO.read(Files.newInputStream(imagePath));
 	Rectangle wordArea = TesseractOcrWordAnalyser.getWordArea(ocrText);
 	BufferedImage wordImage = fullImage.getSubimage(wordArea.x, wordArea.y, wordArea.width, wordArea.height);

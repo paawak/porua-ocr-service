@@ -12,22 +12,23 @@ import org.springframework.stereotype.Service;
 
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntity;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
+import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.model.UserRole;
-import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
-import com.swayam.ocr.porua.tesseract.repo.OcrWordRepositoryTemplate;
+import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepository;
+import com.swayam.ocr.porua.tesseract.repo.OcrWordRepository;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 
 @Service
 public class OcrWordServiceImpl implements OcrWordService {
 
-    private final OcrWordRepositoryTemplate ocrWordRepository;
-    private final CorrectedWordRepositoryTemplate correctedWordRepository;
+    private final OcrWordRepository ocrWordRepository;
+    private final CorrectedWordRepository correctedWordRepository;
 
-    public OcrWordServiceImpl(OcrWordRepositoryTemplate ocrWordRepository, CorrectedWordRepositoryTemplate correctedWordRepository) {
+    public OcrWordServiceImpl(OcrWordRepository ocrWordRepository, CorrectedWordRepository correctedWordRepository) {
 	this.ocrWordRepository = ocrWordRepository;
 	this.correctedWordRepository = correctedWordRepository;
     }
@@ -91,8 +92,11 @@ public class OcrWordServiceImpl implements OcrWordService {
     }
 
     @Override
-    public OcrWordEntityTemplate addOcrWord(OcrWordEntityTemplate ocrWord) {
-	return ocrWordRepository.save(ocrWord);
+    public OcrWord addOcrWord(OcrWord ocrWord) {
+	// TODO:: make this into a proxy
+	OcrWordEntity entity = new OcrWordEntity();
+	BeanUtils.copyProperties(ocrWord, entity);
+	return ocrWordRepository.save(entity);
     }
 
     @Transactional
