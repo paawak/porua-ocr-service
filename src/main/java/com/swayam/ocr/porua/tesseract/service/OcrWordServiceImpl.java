@@ -21,7 +21,7 @@ import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.model.UserRole;
 import com.swayam.ocr.porua.tesseract.repo.BookRepository;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
-import com.swayam.ocr.porua.tesseract.repo.OcrWordRepository;
+import com.swayam.ocr.porua.tesseract.repo.OcrWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 
 @Service
@@ -37,12 +37,12 @@ public class OcrWordServiceImpl implements OcrWordService {
 
     @Override
     public int getWordCount(long bookId, long pageImageId) {
-	return getOcrWordRepository(bookId).countByOcrWordIdBookIdAndOcrWordIdPageImageId(bookId, pageImageId);
+	return getOcrWordRepositoryTemplate(bookId).countByOcrWordIdBookIdAndOcrWordIdPageImageId(bookId, pageImageId);
     }
 
     @Override
     public Collection<OcrWordOutputDto> getWords(long bookId, long pageImageId, UserDetails userDetails) {
-	Collection<OcrWord> entities = getOcrWordRepository(bookId).findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
+	Collection<OcrWord> entities = getOcrWordRepositoryTemplate(bookId).findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
 	return entities.stream().map(entity -> {
 	    OcrWordOutputDto dto = new OcrWordOutputDto();
 	    BeanUtils.copyProperties(entity, dto);
@@ -69,7 +69,7 @@ public class OcrWordServiceImpl implements OcrWordService {
 
     @Override
     public OcrWord getWord(OcrWordId ocrWordId) {
-	return getOcrWordRepository(ocrWordId.getBookId()).findByOcrWordId(ocrWordId).get();
+	return getOcrWordRepositoryTemplate(ocrWordId.getBookId()).findByOcrWordId(ocrWordId).get();
     }
 
     @Transactional
@@ -91,7 +91,7 @@ public class OcrWordServiceImpl implements OcrWordService {
 
     @Override
     public OcrWord addOcrWord(OcrWord ocrWord) {
-	return getOcrWordRepository(ocrWord.getOcrWordId().getBookId()).save(toEntity(ocrWord));
+	return getOcrWordRepositoryTemplate(ocrWord.getOcrWordId().getBookId()).save(toEntity(ocrWord));
     }
 
     @Transactional
@@ -112,10 +112,10 @@ public class OcrWordServiceImpl implements OcrWordService {
 	return 1;
     }
 
-    private OcrWordRepository getOcrWordRepository(long bookId) {
+    private OcrWordRepositoryTemplate getOcrWordRepositoryTemplate(long bookId) {
 	String beanName = bookRepository.findById(bookId).get().getBeanBaseName();
 	// TODO; find based on name
-	return applicationContext.getBean(OcrWordRepository.class);
+	return applicationContext.getBean(OcrWordRepositoryTemplate.class);
     }
 
     private CorrectedWordRepositoryTemplate getCorrectedWordRepositoryTemplate(long bookId) {
