@@ -10,13 +10,12 @@ import javax.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import com.swayam.ocr.porua.tesseract.model.CorrectedWord;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntity;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
-import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
-import com.swayam.ocr.porua.tesseract.model.OcrWordWithCorrection;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.model.UserRole;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepository;
@@ -41,21 +40,21 @@ public class OcrWordServiceImpl implements OcrWordService {
 
     @Override
     public Collection<OcrWordOutputDto> getWords(long bookId, long pageImageId, UserDetails userDetails) {
-	Collection<? extends OcrWordEntityTemplate> entities = ocrWordRepository.findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
+	Collection<OcrWord> entities = ocrWordRepository.findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
 	return entities.stream().map(entity -> {
 	    OcrWordOutputDto dto = new OcrWordOutputDto();
 	    BeanUtils.copyProperties(entity, dto);
-	    List<? extends CorrectedWordEntityTemplate> correctedWords = entity.getCorrectedWords();
+	    List<? extends CorrectedWord> correctedWords = entity.getCorrectedWords();
 	    if (correctedWords.size() > 0) {
 
 		boolean isIgnored =
 			correctedWords.stream().filter(correctedWord -> (correctedWord.getUser().getRole() == UserRole.ADMIN_ROLE) || (correctedWord.getUser().getId() == userDetails.getId()))
-				.anyMatch(CorrectedWordEntityTemplate::isIgnored);
+				.anyMatch(CorrectedWord::isIgnored);
 
 		if (isIgnored) {
 		    dto.setIgnored(true);
 		} else {
-		    Optional<? extends CorrectedWordEntityTemplate> correctedWordWithText = correctedWords.stream().filter(correctedWord -> correctedWord.getCorrectedText() != null).findFirst();
+		    Optional<? extends CorrectedWord> correctedWordWithText = correctedWords.stream().filter(correctedWord -> correctedWord.getCorrectedText() != null).findFirst();
 		    if (correctedWordWithText.isPresent()) {
 			dto.setCorrectedText(correctedWordWithText.get().getCorrectedText());
 		    }
@@ -76,7 +75,7 @@ public class OcrWordServiceImpl implements OcrWordService {
     public int markWordAsIgnored(OcrWordId ocrWordId, UserDetails user) {
 	OcrWord ocrWord = getWord(ocrWordId);
 
-	Optional<OcrWordWithCorrection> existingCorrection = correctedWordRepository.findByOcrWordIdAndUser(ocrWord.getId(), user);
+	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
 	if (existingCorrection.isPresent()) {
 	    return correctedWordRepository.markAsIgnored(ocrWord.getId(), user);
@@ -98,7 +97,7 @@ public class OcrWordServiceImpl implements OcrWordService {
 
 	OcrWord ocrWord = getWord(ocrWordId);
 
-	Optional<OcrWordWithCorrection> existingCorrection = correctedWordRepository.findByOcrWordIdAndUser(ocrWord.getId(), user);
+	Optional<CorrectedWord> existingCorrection = correctedWordRepository.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
 	if (existingCorrection.isPresent()) {
 	    return correctedWordRepository.updateCorrectedText(ocrWord.getId(), correctedText, user);

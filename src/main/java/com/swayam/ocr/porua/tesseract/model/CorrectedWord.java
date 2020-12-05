@@ -1,6 +1,8 @@
 package com.swayam.ocr.porua.tesseract.model;
 
-public interface OcrWordWithCorrection {
+public interface CorrectedWord {
+
+    UserDetails getUser();
 
     String getCorrectedText();
 

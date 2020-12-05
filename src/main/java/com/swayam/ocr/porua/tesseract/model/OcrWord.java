@@ -22,6 +22,6 @@ public interface OcrWord {
 
     Integer getLineNumber();
 
-    List<? extends CorrectedWordEntityTemplate> getCorrectedWords();
+    List<? extends CorrectedWord> getCorrectedWords();
 
 }

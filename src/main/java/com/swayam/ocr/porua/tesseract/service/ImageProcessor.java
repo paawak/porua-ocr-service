@@ -101,7 +101,7 @@ public class ImageProcessor {
 	return new TesseractOcrWordAnalyser(savedImagePath, book.getLanguage(), tessDataDirectory).extractWordsFromImage((wordSequenceId) -> new OcrWordId(book.getId(), imageFileId, wordSequenceId))
 		.stream().map(rawText -> ocrDataStoreService.addOcrWord(rawText)).map(ocrWord -> {
 		    OcrWordOutputDto dto = new OcrWordOutputDto();
-		    BeanUtils.copyProperties(ocrWord, dto, "correctedWords");
+		    BeanUtils.copyProperties(ocrWord, dto);
 		    return dto;
 		}).collect(Collectors.toUnmodifiableList());
 

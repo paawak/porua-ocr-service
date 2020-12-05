@@ -3,15 +3,15 @@ package com.swayam.ocr.porua.tesseract.rest.train.dto;
 import java.util.Collections;
 import java.util.List;
 
-import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
+import com.swayam.ocr.porua.tesseract.model.CorrectedWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
-import com.swayam.ocr.porua.tesseract.model.OcrWordWithCorrection;
+import com.swayam.ocr.porua.tesseract.model.UserDetails;
 
 import lombok.Data;
 
 @Data
-public class OcrWordOutputDto implements OcrWord, OcrWordWithCorrection {
+public class OcrWordOutputDto implements OcrWord, CorrectedWord {
 
     private long id;
 
@@ -36,8 +36,13 @@ public class OcrWordOutputDto implements OcrWord, OcrWordWithCorrection {
     private boolean ignored;
 
     @Override
-    public List<? extends CorrectedWordEntityTemplate> getCorrectedWords() {
+    public List<CorrectedWord> getCorrectedWords() {
 	return Collections.emptyList();
+    }
+
+    @Override
+    public UserDetails getUser() {
+	return null;
     }
 
 }
