@@ -113,15 +113,19 @@ public class OcrWordServiceImpl implements OcrWordService {
     }
 
     private OcrWordRepositoryTemplate getOcrWordRepositoryTemplate(long bookId) {
-	String beanName = bookRepository.findById(bookId).get().getBeanBaseName();
+	String baseClassName = getBaseClassName(bookId);
 	// TODO; find based on name
 	return applicationContext.getBean(OcrWordRepositoryTemplate.class);
     }
 
     private CorrectedWordRepositoryTemplate getCorrectedWordRepositoryTemplate(long bookId) {
-	String beanName = bookRepository.findById(bookId).get().getBeanBaseName();
+	String baseClassName = getBaseClassName(bookId);
 	// TODO; find based on name
 	return applicationContext.getBean(CorrectedWordRepositoryTemplate.class);
+    }
+
+    private String getBaseClassName(long bookId) {
+	return bookRepository.findById(bookId).get().getBaseTableName();
     }
 
     private OcrWordEntity toEntity(OcrWord ocrWord) {

@@ -11,5 +11,5 @@
 	<include file="V5__ocr_word_new_col_id.xml" relativeToChangelogFile="true" />
 	<include file="V6__remove_correction_details_ocr_word.xml" relativeToChangelogFile="true" />
 	<include file="V7__corrected_word_table_schema.xml" relativeToChangelogFile="true" />
-	<include file="V8__alter_book_add_bean_name.xml" relativeToChangelogFile="true" />
+	<include file="V8__alter_book_add_table_name.xml" relativeToChangelogFile="true" />
 </databaseChangeLog>

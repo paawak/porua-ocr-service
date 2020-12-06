@@ -6,7 +6,7 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 	<changeSet author="Palash Ray" id="8">
 		<addColumn tableName="book">
-			<column name="bean_base_name" type="VARCHAR(300)" />
+			<column name="base_table_name" type="VARCHAR(40)" />
 		</addColumn>
 	</changeSet>
 </databaseChangeLog>
