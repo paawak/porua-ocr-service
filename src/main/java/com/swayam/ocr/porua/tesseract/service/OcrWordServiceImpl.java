@@ -3,6 +3,8 @@ package com.swayam.ocr.porua.tesseract.service;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
@@ -11,6 +13,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWord;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntity;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
@@ -24,8 +27,15 @@ import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 
+import lombok.Value;
+
 @Service
 public class OcrWordServiceImpl implements OcrWordService {
+
+    private static final String OCR_WORD_ENTITY_SUFFIX = "OcrWordEntity";
+    private static final String CORRECTED_WORD_ENTITY_SUFFIX = "CorrectedWordEntity";
+    private static final String OCR_WORD_ENTITY_REPOSITORY_SUFFIX = "OcrWordRepository";
+    private static final String CORRECTED_WORD_ENTITY_REPOSITORY_SUFFIX = "CorrectedWordRepository";
 
     private final BookRepository bookRepository;
     private final ApplicationContext applicationContext;
@@ -113,19 +123,41 @@ public class OcrWordServiceImpl implements OcrWordService {
     }
 
     private OcrWordRepositoryTemplate getOcrWordRepositoryTemplate(long bookId) {
-	String baseClassName = getBaseClassName(bookId);
+	EntityClassDetails entityClassDetails = getEntityClassDetails(bookId);
 	// TODO; find based on name
 	return applicationContext.getBean(OcrWordRepositoryTemplate.class);
     }
 
     private CorrectedWordRepositoryTemplate getCorrectedWordRepositoryTemplate(long bookId) {
-	String baseClassName = getBaseClassName(bookId);
+	EntityClassDetails entityClassDetails = getEntityClassDetails(bookId);
 	// TODO; find based on name
 	return applicationContext.getBean(CorrectedWordRepositoryTemplate.class);
     }
 
-    private String getBaseClassName(long bookId) {
-	return bookRepository.findById(bookId).get().getBaseTableName();
+    @VisibleForTesting
+    EntityClassDetails getEntityClassDetails(long bookId) {
+	String baseTableName = bookRepository.findById(bookId).get().getBaseTableName();
+
+	String regex = "_[a-z]";
+
+	Pattern pattern = Pattern.compile(regex);
+
+	Matcher matcher = pattern.matcher(baseTableName);
+
+	StringBuilder baseNameBuilder = new StringBuilder();
+
+	while (matcher.find()) {
+	    String originalToken = matcher.group();
+	    String replacement = Character.toString(originalToken.charAt(1)).toUpperCase();
+	    matcher.appendReplacement(baseNameBuilder, replacement);
+	}
+
+	matcher.appendTail(baseNameBuilder);
+
+	String baseName = baseNameBuilder.replace(0, 1, Character.toString(baseNameBuilder.charAt(0)).toUpperCase()).toString();
+
+	return new EntityClassDetails(baseName + OCR_WORD_ENTITY_SUFFIX, baseName + CORRECTED_WORD_ENTITY_SUFFIX, baseName + OCR_WORD_ENTITY_REPOSITORY_SUFFIX,
+		baseName + CORRECTED_WORD_ENTITY_REPOSITORY_SUFFIX);
     }
 
     private OcrWordEntity toEntity(OcrWord ocrWord) {
@@ -149,6 +181,17 @@ public class OcrWordServiceImpl implements OcrWordService {
 	CorrectedWordEntity entity = new CorrectedWordEntity();
 	BeanUtils.copyProperties(correctedWord, entity);
 	return entity;
+    }
+
+    @VisibleForTesting
+    @Value
+    static class EntityClassDetails {
+
+	private final String ocrWordEntity;
+	private final String correctedWordEntity;
+	private final String ocrWordEntityRepository;
+	private final String correctedWordEntityRepository;
+
     }
 
 }
