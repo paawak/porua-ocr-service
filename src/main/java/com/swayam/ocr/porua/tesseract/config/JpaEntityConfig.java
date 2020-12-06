@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.stereotype.Repository;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
@@ -108,9 +109,20 @@ public class JpaEntityConfig {
 
     private void createOcrWordRepository(String repositoryClassName, Class<?> entityClass) {
 	Generic crudRepo = Generic.Builder.parameterizedType(CrudRepository.class, entityClass, Long.class).build();
-	Class<?> ocrWordEntityClass = new ByteBuddy().makeInterface(crudRepo).implement(OcrWordRepositoryTemplate.class).name(repositoryClassName).make()
-		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER).getLoaded();
+	Class<?> ocrWordEntityClass = new ByteBuddy().makeInterface(crudRepo).implement(OcrWordRepositoryTemplate.class).annotateType(new Repository() {
 
+	    @Override
+	    public Class<? extends Annotation> annotationType() {
+		return Repository.class;
+	    }
+
+	    @Override
+	    public String value() {
+		return repositoryClassName;
+	    }
+	}).name(repositoryClassName).make().load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER).getLoaded();
+
+	System.out.println("***********" + ocrWordEntityClass);
     }
 
 }
