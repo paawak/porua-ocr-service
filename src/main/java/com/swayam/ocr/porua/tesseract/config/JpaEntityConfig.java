@@ -13,15 +13,18 @@ import javax.sql.DataSource;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
+import com.swayam.ocr.porua.tesseract.repo.OcrWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.service.EntityClassUtil;
 import com.swayam.ocr.porua.tesseract.service.EntityClassUtil.EntityClassDetails;
 
 import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.description.type.TypeDescription.Generic;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 
 @Configuration
@@ -48,11 +51,12 @@ public class JpaEntityConfig {
 	while (res.next()) {
 	    String baseTableName = res.getString("base_table_name");
 	    EntityClassDetails entityClassDetails = new EntityClassUtil().getEntityClassDetails(baseTableName);
-	    createOcrWordEntity(baseTableName, entityClassDetails.getOcrWordEntity());
+	    Class<?> ocrWordEntity = createOcrWordEntity(baseTableName, entityClassDetails.getOcrWordEntity());
+	    createOcrWordRepository(entityClassDetails.getOcrWordEntityRepository(), ocrWordEntity);
 	}
     }
 
-    private void createOcrWordEntity(String baseTableName, String entityClassName) {
+    private Class<?> createOcrWordEntity(String baseTableName, String entityClassName) {
 
 	Class<?> ocrWordEntityClass = new ByteBuddy().subclass(OcrWordEntityTemplate.class).annotateType(new Entity() {
 
@@ -97,6 +101,15 @@ public class JpaEntityConfig {
 		return "";
 	    }
 	}).name(entityClassName).make().load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER).getLoaded();
+
+	return ocrWordEntityClass;
+
+    }
+
+    private void createOcrWordRepository(String repositoryClassName, Class<?> entityClass) {
+	Generic crudRepo = Generic.Builder.parameterizedType(CrudRepository.class, entityClass, Long.class).build();
+	Class<?> ocrWordEntityClass = new ByteBuddy().makeInterface(crudRepo).implement(OcrWordRepositoryTemplate.class).name(repositoryClassName).make()
+		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER).getLoaded();
 
     }
 
