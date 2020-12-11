@@ -3,6 +3,7 @@ package com.swayam.ocr.porua.tesseract.config;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -63,6 +64,10 @@ public class JpaEntityConfig implements EnvironmentPostProcessor {
 
     private void createOcrWordEntity(String baseTableName, String entityClassName) throws IOException {
 
+	if (classFileExists(entityClassName)) {
+	    return;
+	}
+
 	new ByteBuddy().subclass(OcrWordEntityTemplate.class).annotateType(new Entity() {
 
 	    @Override
@@ -105,11 +110,14 @@ public class JpaEntityConfig implements EnvironmentPostProcessor {
 	    public String catalog() {
 		return "";
 	    }
-	}).name(entityClassName).make().load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER).saveIn(new File("/kaaj/source/porua-ocr/porua-ocr-service/target/classes"));
+	}).name(entityClassName).make().load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER).saveIn(getBaseLocation());
 
     }
 
     private void createOcrWordRepository(String repositoryClassName, String entityClassName) throws IOException, ClassNotFoundException {
+	if (classFileExists(repositoryClassName)) {
+	    return;
+	}
 	Generic crudRepo = Generic.Builder.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
 	new ByteBuddy().makeInterface(crudRepo).implement(OcrWordRepositoryTemplate.class).annotateType(new Repository() {
 
@@ -122,8 +130,24 @@ public class JpaEntityConfig implements EnvironmentPostProcessor {
 	    public String value() {
 		return repositoryClassName;
 	    }
-	}).name(repositoryClassName).make().load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER).saveIn(new File("/kaaj/source/porua-ocr/porua-ocr-service/target/classes"));
+	}).name(repositoryClassName).make().load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER).saveIn(getBaseLocation());
 
+    }
+
+    private boolean classFileExists(String className) {
+	File baseLocation = getBaseLocation();
+	File pathToClassFile = new File(baseLocation, className.replaceAll("\\.", "/") + ".class");
+	return pathToClassFile.exists();
+    }
+
+    private File getBaseLocation() {
+	File baseLocation;
+	try {
+	    baseLocation = new File(JpaEntityConfig.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+	} catch (URISyntaxException e) {
+	    throw new RuntimeException(e);
+	}
+	return baseLocation;
     }
 
 }
