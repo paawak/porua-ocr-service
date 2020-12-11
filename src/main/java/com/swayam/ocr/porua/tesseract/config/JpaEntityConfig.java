@@ -39,14 +39,14 @@ public class JpaEntityConfig implements EnvironmentPostProcessor {
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
 	try {
-	    createEntities();
+	    createEntities(environment.getProperty("spring.datasource.url"), environment.getProperty("spring.datasource.username"), environment.getProperty("spring.datasource.password"));
 	} catch (SQLException | IOException e) {
 	    throw new RuntimeException(e);
 	}
     }
 
-    private void createEntities() throws SQLException, IOException {
-	Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/exp_to_b_del?useSSL=false", "root", "root123");
+    private void createEntities(String dbUrl, String dbUser, String dbPassword) throws SQLException, IOException {
+	Connection con = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
 	PreparedStatement pStat = con.prepareStatement("SELECT base_table_name FROM book");
 	ResultSet res = pStat.executeQuery();
 	while (res.next()) {
