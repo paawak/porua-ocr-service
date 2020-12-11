@@ -31,7 +31,7 @@ import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.type.TypeDescription.Generic;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 
-public class JpaEntityConfig implements EnvironmentPostProcessor {
+public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcessor {
 
     public static final String ENTITY_PACKAGE = Book.class.getPackageName();
 
@@ -143,7 +143,7 @@ public class JpaEntityConfig implements EnvironmentPostProcessor {
     private File getBaseLocation() {
 	File baseLocation;
 	try {
-	    baseLocation = new File(JpaEntityConfig.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+	    baseLocation = new File(DynamicJpaRepositoryPostProcessor.class.getProtectionDomain().getCodeSource().getLocation().toURI());
 	} catch (URISyntaxException e) {
 	    throw new RuntimeException(e);
 	}
