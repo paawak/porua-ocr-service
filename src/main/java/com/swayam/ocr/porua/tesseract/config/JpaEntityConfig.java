@@ -1,6 +1,8 @@
 package com.swayam.ocr.porua.tesseract.config;
 
 import java.lang.annotation.Annotation;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,13 +11,11 @@ import javax.persistence.Entity;
 import javax.persistence.Index;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import javax.sql.DataSource;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.orm.jpa.JpaVendorAdapter;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.stereotype.Repository;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
@@ -28,26 +28,24 @@ import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.type.TypeDescription.Generic;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 
-@Configuration
-public class JpaEntityConfig {
+public class JpaEntityConfig implements EnvironmentPostProcessor {
 
     public static final String ENTITY_PACKAGE = Book.class.getPackageName();
 
     private static final String OCR_WORD_TABLE_SUFFIX = "_ocr_word";
 
-    @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory(JpaVendorAdapter jpaVendorAdapter, DataSource dataSource) throws SQLException {
-	createEntities(dataSource);
-	LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-	factory.setJpaVendorAdapter(jpaVendorAdapter);
-	factory.setPackagesToScan(ENTITY_PACKAGE);
-	// factory.setMappingResources(mappingResources);
-	factory.setDataSource(dataSource);
-	return factory;
+    @Override
+    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+	try {
+	    createEntities();
+	} catch (SQLException e) {
+	    throw new RuntimeException(e);
+	}
     }
 
-    private void createEntities(DataSource dataSource) throws SQLException {
-	PreparedStatement pStat = dataSource.getConnection().prepareStatement("SELECT base_table_name FROM book");
+    private void createEntities() throws SQLException {
+	Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/exp_to_b_del?useSSL=false", "root", "root123");
+	PreparedStatement pStat = con.prepareStatement("SELECT base_table_name FROM book");
 	ResultSet res = pStat.executeQuery();
 	while (res.next()) {
 	    String baseTableName = res.getString("base_table_name");
@@ -118,11 +116,11 @@ public class JpaEntityConfig {
 
 	    @Override
 	    public String value() {
-		return repositoryClassName;
+		return "";
 	    }
 	}).name(repositoryClassName).make().load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER).getLoaded();
 
-	System.out.println("***********" + ocrWordEntityClass);
+	System.err.println("***********" + ocrWordEntityClass);
     }
 
 }
