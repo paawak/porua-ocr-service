@@ -120,7 +120,7 @@ public class JpaEntityConfig implements EnvironmentPostProcessor {
 
 	    @Override
 	    public String value() {
-		return "";
+		return repositoryClassName;
 	    }
 	}).name(repositoryClassName).make().load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER).saveIn(new File("/kaaj/source/porua-ocr/porua-ocr-service/target/classes"));
 

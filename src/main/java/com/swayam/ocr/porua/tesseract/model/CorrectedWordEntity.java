@@ -4,7 +4,7 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "corrected_word")
+@Table(name = "rajshekhar_basu_mahabharat_bangla_corrected_word")
 public class CorrectedWordEntity extends CorrectedWordEntityTemplate {
 
 }

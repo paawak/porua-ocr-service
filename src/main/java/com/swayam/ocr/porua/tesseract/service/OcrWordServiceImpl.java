@@ -1,5 +1,6 @@
 package com.swayam.ocr.porua.tesseract.service;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +16,6 @@ import com.swayam.ocr.porua.tesseract.model.CorrectedWord;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntity;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
-import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.model.UserRole;
@@ -115,8 +115,7 @@ public class OcrWordServiceImpl implements OcrWordService {
 
     private OcrWordRepositoryTemplate getOcrWordRepositoryTemplate(long bookId) {
 	EntityClassDetails entityClassDetails = getEntityClassDetails(bookId);
-	// TODO; find based on name
-	return applicationContext.getBean(OcrWordRepositoryTemplate.class);
+	return applicationContext.getBean(entityClassDetails.getOcrWordEntityRepository(), OcrWordRepositoryTemplate.class);
     }
 
     private CorrectedWordRepositoryTemplate getCorrectedWordRepositoryTemplate(long bookId) {
@@ -130,9 +129,14 @@ public class OcrWordServiceImpl implements OcrWordService {
 	return new EntityClassUtil().getEntityClassDetails(baseTableName);
     }
 
-    private OcrWordEntity toEntity(OcrWord ocrWord) {
-	// TODO:: make this into a proxy
-	OcrWordEntity entity = new OcrWordEntity();
+    private OcrWord toEntity(OcrWord ocrWord) {
+	EntityClassDetails entityClassDetails = getEntityClassDetails(ocrWord.getOcrWordId().getBookId());
+	OcrWord entity;
+	try {
+	    entity = (OcrWord) Class.forName(entityClassDetails.getOcrWordEntity()).getDeclaredConstructor().newInstance();
+	} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+	    throw new RuntimeException(e);
+	}
 	BeanUtils.copyProperties(ocrWord, entity);
 	return entity;
     }
