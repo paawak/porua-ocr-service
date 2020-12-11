@@ -16,6 +16,7 @@ logging:
     org.springframework.web: INFO
     org.springframework.web.client.RestTemplate: DEBUG
     org.springframework.security.web.FilterChainProxy: WARN
+    org.springframework.data.repository: DEBUG
 
 spring:
   servlet:
