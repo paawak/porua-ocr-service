@@ -78,14 +78,14 @@ public class OcrWordServiceImpl implements OcrWordService {
     public int markWordAsIgnored(OcrWordId ocrWordId, UserDetails user) {
 	OcrWord ocrWord = getWord(ocrWordId);
 
-	CorrectedWordRepositoryTemplate CorrectedWordRepositoryTemplate = getCorrectedWordRepositoryTemplate(ocrWordId.getBookId());
-	Optional<CorrectedWord> existingCorrection = CorrectedWordRepositoryTemplate.findByOcrWordIdAndUser(ocrWord.getId(), user);
+	CorrectedWordRepositoryTemplate correctedWordRepositoryTemplate = getCorrectedWordRepositoryTemplate(ocrWordId.getBookId());
+	Optional<CorrectedWord> existingCorrection = correctedWordRepositoryTemplate.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
 	if (existingCorrection.isPresent()) {
-	    return CorrectedWordRepositoryTemplate.markAsIgnored(ocrWord.getId(), user);
+	    return correctedWordRepositoryTemplate.markAsIgnored(ocrWord.getId(), user);
 	}
 
-	CorrectedWordRepositoryTemplate.save(toEntity(Optional.empty(), ocrWord.getId(), user));
+	correctedWordRepositoryTemplate.save(toEntity(Optional.empty(), ocrWord.getId(), user));
 
 	return 1;
     }
@@ -101,14 +101,14 @@ public class OcrWordServiceImpl implements OcrWordService {
 
 	OcrWord ocrWord = getWord(ocrWordId);
 
-	CorrectedWordRepositoryTemplate CorrectedWordRepositoryTemplate = getCorrectedWordRepositoryTemplate(ocrWordId.getBookId());
-	Optional<CorrectedWord> existingCorrection = CorrectedWordRepositoryTemplate.findByOcrWordIdAndUser(ocrWord.getId(), user);
+	CorrectedWordRepositoryTemplate correctedWordRepositoryTemplate = getCorrectedWordRepositoryTemplate(ocrWordId.getBookId());
+	Optional<CorrectedWord> existingCorrection = correctedWordRepositoryTemplate.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
 	if (existingCorrection.isPresent()) {
-	    return CorrectedWordRepositoryTemplate.updateCorrectedText(ocrWord.getId(), correctedText, user);
+	    return correctedWordRepositoryTemplate.updateCorrectedText(ocrWord.getId(), correctedText, user);
 	}
 
-	CorrectedWordRepositoryTemplate.save(toEntity(Optional.of(correctedText), ocrWord.getId(), user));
+	correctedWordRepositoryTemplate.save(toEntity(Optional.of(correctedText), ocrWord.getId(), user));
 
 	return 1;
     }
