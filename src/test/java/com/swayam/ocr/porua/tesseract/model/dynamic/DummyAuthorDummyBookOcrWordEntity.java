@@ -15,7 +15,7 @@ import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 public class DummyAuthorDummyBookOcrWordEntity extends OcrWordEntityTemplate {
 
     @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "ocrWordId")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "ocrWordId")
     private List<DummyAuthorDummyBookCorrectedWordEntity> correctedWords;
 
     @Override
