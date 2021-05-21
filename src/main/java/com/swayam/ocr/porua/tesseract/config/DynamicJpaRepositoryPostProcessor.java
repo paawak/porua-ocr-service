@@ -96,10 +96,11 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     private void createOcrWordEntity(String baseTableName, String entityClassName) throws IOException {
 
 	if (classFileExists(entityClassName)) {
+	    System.out.println("The class " + entityClassName + " already exists, not creating a new one");
 	    return;
 	}
 
-	System.out.println("***********************");
+	System.out.println("Creating new class: " + entityClassName);
 
 	new ByteBuddy().subclass(OcrWordEntityTemplate.class).annotateType(new Entity() {
 
