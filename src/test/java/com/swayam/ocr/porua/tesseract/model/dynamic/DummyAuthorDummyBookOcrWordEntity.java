@@ -6,7 +6,7 @@ import javax.persistence.Table;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 
 @Entity
-@Table(name = "ocr_word")
+@Table(name = "dummy_author_dummy_book_ocr_word")
 public class DummyAuthorDummyBookOcrWordEntity extends OcrWordEntityTemplate {
 
 }
