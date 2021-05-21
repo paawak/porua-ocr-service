@@ -3,6 +3,7 @@ package com.swayam.ocr.porua.tesseract.config;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,9 +11,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
+import java.util.List;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Index;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -25,15 +29,20 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.swayam.ocr.porua.tesseract.model.Book;
+import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.service.EntityClassUtil;
 import com.swayam.ocr.porua.tesseract.service.EntityClassUtil.EntityClassDetails;
 
 import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.description.annotation.AnnotationDescription;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeDescription.Generic;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.implementation.FieldAccessor;
 
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcessor {
@@ -90,6 +99,8 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	    return;
 	}
 
+	System.out.println("***********************");
+
 	new ByteBuddy().subclass(OcrWordEntityTemplate.class).annotateType(new Entity() {
 
 	    @Override
@@ -132,7 +143,18 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	    public String catalog() {
 		return "";
 	    }
-	}).name(entityClassName).make()
+	}).defineField("correctedWords",
+		TypeDescription.Generic.Builder.parameterizedType(List.class, CorrectedWordEntity.class)
+			.build(),
+		Modifier.PRIVATE)
+		.annotateField(AnnotationDescription.Builder.ofType(OneToMany.class)
+			.define("fetch", FetchType.LAZY).define("mappedBy", "ocrWordId").build())
+		.annotateField(AnnotationDescription.Builder.ofType(JsonIgnore.class).build())
+		.defineMethod("getCorrectedWords",
+			TypeDescription.Generic.Builder
+				.parameterizedType(List.class, CorrectedWordEntity.class).build(),
+			Modifier.PUBLIC)
+		.intercept(FieldAccessor.ofBeanProperty()).name(entityClassName).make()
 		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
 		.saveIn(getBaseLocation());
 

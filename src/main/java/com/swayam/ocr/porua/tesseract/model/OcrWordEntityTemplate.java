@@ -1,23 +1,17 @@
 package com.swayam.ocr.porua.tesseract.model;
 
-import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Embedded;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToMany;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
 
 @MappedSuperclass
 @Data
-public class OcrWordEntityTemplate implements OcrWord {
+public abstract class OcrWordEntityTemplate implements OcrWord {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,9 +40,5 @@ public class OcrWordEntityTemplate implements OcrWord {
 
     @Column(name = "line_number")
     private Integer lineNumber;
-
-    @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "ocrWordId")
-    private List<CorrectedWordEntity> correctedWords;
 
 }
