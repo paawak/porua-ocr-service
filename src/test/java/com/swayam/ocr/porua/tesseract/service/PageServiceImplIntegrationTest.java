@@ -164,7 +164,7 @@ class PageServiceImplIntegrationTest {
 	PageImage result = testClass.addPageImage(pageImage);
 
 	// then
-	assertEquals(3, result.getId());
+	assertTrue(result.getId() > 1);
 	assertEquals(book, result.getBook());
 	assertEquals("TEST IMAGE TIFF 1", result.getName());
 	assertEquals(10, result.getPageNumber());
