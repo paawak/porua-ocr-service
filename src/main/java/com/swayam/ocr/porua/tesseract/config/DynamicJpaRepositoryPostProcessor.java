@@ -9,6 +9,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLSyntaxErrorException;
 
 import javax.persistence.Entity;
 import javax.persistence.Index;
@@ -17,9 +18,12 @@ import javax.persistence.UniqueConstraint;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
@@ -31,6 +35,7 @@ import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.type.TypeDescription.Generic;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 
+@Order(Ordered.LOWEST_PRECEDENCE)
 public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcessor {
 
     public static final String ENTITY_PACKAGE = Book.class.getPackageName();
@@ -39,23 +44,40 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+	System.out.println("Start creating dynamic JPA Repos...");
 	try {
-	    createEntities(environment.getProperty("spring.datasource.url"), environment.getProperty("spring.datasource.username"), environment.getProperty("spring.datasource.password"));
+	    createEntities(environment.getProperty("spring.datasource.url"),
+		    environment.getProperty("spring.datasource.username"),
+		    environment.getProperty("spring.datasource.password"));
 	} catch (SQLException | IOException e) {
 	    throw new RuntimeException(e);
 	}
     }
 
-    private void createEntities(String dbUrl, String dbUser, String dbPassword) throws SQLException, IOException {
+    private void createEntities(String dbUrl, String dbUser, String dbPassword)
+	    throws SQLException, IOException {
 	Connection con = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
-	PreparedStatement pStat = con.prepareStatement("SELECT base_table_name FROM book");
+	PreparedStatement pStat;
+	try {
+	    pStat = con.prepareStatement("SELECT base_table_name FROM book");
+	} catch (SQLSyntaxErrorException e) {
+	    System.err.println("Could not create dynamic JPA Repos: " + e.getMessage());
+	    e.printStackTrace();
+	    return;
+	}
 	ResultSet res = pStat.executeQuery();
 	while (res.next()) {
 	    String baseTableName = res.getString("base_table_name");
-	    EntityClassDetails entityClassDetails = new EntityClassUtil().getEntityClassDetails(baseTableName);
+	    if (!StringUtils.hasText(baseTableName)) {
+		System.err.println("Dynamic JPA Repo cannot be created as the *base_table_name* is empty");
+		continue;
+	    }
+	    EntityClassDetails entityClassDetails =
+		    new EntityClassUtil().getEntityClassDetails(baseTableName);
 	    createOcrWordEntity(baseTableName, entityClassDetails.getOcrWordEntity());
 	    try {
-		createOcrWordRepository(entityClassDetails.getOcrWordEntityRepository(), entityClassDetails.getOcrWordEntity());
+		createOcrWordRepository(entityClassDetails.getOcrWordEntityRepository(),
+			entityClassDetails.getOcrWordEntity());
 	    } catch (ClassNotFoundException | IOException e) {
 		throw new RuntimeException(e);
 	    }
@@ -110,27 +132,34 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	    public String catalog() {
 		return "";
 	    }
-	}).name(entityClassName).make().load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER).saveIn(getBaseLocation());
+	}).name(entityClassName).make()
+		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
+		.saveIn(getBaseLocation());
 
     }
 
-    private void createOcrWordRepository(String repositoryClassName, String entityClassName) throws IOException, ClassNotFoundException {
+    private void createOcrWordRepository(String repositoryClassName, String entityClassName)
+	    throws IOException, ClassNotFoundException {
 	if (classFileExists(repositoryClassName)) {
 	    return;
 	}
-	Generic crudRepo = Generic.Builder.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
-	new ByteBuddy().makeInterface(crudRepo).implement(OcrWordRepositoryTemplate.class).annotateType(new Repository() {
+	Generic crudRepo = Generic.Builder
+		.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
+	new ByteBuddy().makeInterface(crudRepo).implement(OcrWordRepositoryTemplate.class)
+		.annotateType(new Repository() {
 
-	    @Override
-	    public Class<? extends Annotation> annotationType() {
-		return Repository.class;
-	    }
+		    @Override
+		    public Class<? extends Annotation> annotationType() {
+			return Repository.class;
+		    }
 
-	    @Override
-	    public String value() {
-		return repositoryClassName;
-	    }
-	}).name(repositoryClassName).make().load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER).saveIn(getBaseLocation());
+		    @Override
+		    public String value() {
+			return repositoryClassName;
+		    }
+		}).name(repositoryClassName).make()
+		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
+		.saveIn(getBaseLocation());
 
     }
 
@@ -143,7 +172,8 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     private File getBaseLocation() {
 	File baseLocation;
 	try {
-	    baseLocation = new File(DynamicJpaRepositoryPostProcessor.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+	    baseLocation = new File(DynamicJpaRepositoryPostProcessor.class.getProtectionDomain()
+		    .getCodeSource().getLocation().toURI());
 	} catch (URISyntaxException e) {
 	    throw new RuntimeException(e);
 	}
