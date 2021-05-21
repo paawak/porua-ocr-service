@@ -17,9 +17,9 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
+import com.swayam.ocr.porua.tesseract.model.dynamic.DummyAuthorDummyBookOcrWordEntity;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -52,15 +52,16 @@ class OcrWordServiceImplIntegrationTest {
     @Test
     void testAddOcrWord() {
 	// given
-	OcrWordEntity ocrWord = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	DummyAuthorDummyBookOcrWordEntity ocrWord = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
 
-	List<OcrWordEntity> expected = Arrays.asList(ocrWord);
+	List<DummyAuthorDummyBookOcrWordEntity> expected = Arrays.asList(ocrWord);
 
 	// when
 	testClass.addOcrWord(ocrWord);
 
 	// then
-	List<OcrWordEntity> results = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
+	List<DummyAuthorDummyBookOcrWordEntity> results =
+		jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
 
 	assertEquals(expected, results);
     }
@@ -68,13 +69,16 @@ class OcrWordServiceImplIntegrationTest {
     @Test
     void testUpdateCorrectTextInOcrWord() {
 	// given
-	OcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWordEntity ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWordEntity ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	DummyAuthorDummyBookOcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	DummyAuthorDummyBookOcrWordEntity ocrWord2 =
+		getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	DummyAuthorDummyBookOcrWordEntity ocrWord3 =
+		getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 
-	OcrWordEntity ocrWord2_1 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	DummyAuthorDummyBookOcrWordEntity ocrWord2_1 =
+		getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
 
-	List<OcrWordEntity> expected = Arrays.asList(ocrWord1, ocrWord2_1, ocrWord3);
+	List<DummyAuthorDummyBookOcrWordEntity> expected = Arrays.asList(ocrWord1, ocrWord2_1, ocrWord3);
 
 	testClass.addOcrWord(ocrWord1);
 	testClass.addOcrWord(ocrWord2);
@@ -84,7 +88,8 @@ class OcrWordServiceImplIntegrationTest {
 	testClass.updateCorrectTextInOcrWord(new OcrWordId(1, 1, 2), "I have changed", new UserDetails());
 
 	// then
-	List<OcrWordEntity> results = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
+	List<DummyAuthorDummyBookOcrWordEntity> results =
+		jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
 
 	assertEquals(expected, results);
     }
@@ -92,9 +97,11 @@ class OcrWordServiceImplIntegrationTest {
     @Test
     void testMarkWordAsIgnored() {
 	// given
-	OcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWordEntity ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWordEntity ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	DummyAuthorDummyBookOcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	DummyAuthorDummyBookOcrWordEntity ocrWord2 =
+		getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	DummyAuthorDummyBookOcrWordEntity ocrWord3 =
+		getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 
 	testClass.addOcrWord(ocrWord1);
 	testClass.addOcrWord(ocrWord2);
@@ -105,27 +112,34 @@ class OcrWordServiceImplIntegrationTest {
 
 	// then
 	assertEquals(1, result);
-	List<OcrWordEntity> words = jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
+	List<DummyAuthorDummyBookOcrWordEntity> words =
+		jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
 	assertEquals(Arrays.asList(ocrWord1, ocrWord2, ocrWord3), words);
     }
 
     @Test
     void testGetWords() {
 	// given
-	OcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWordEntity ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWordEntity ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
-	OcrWordEntity ocrWord4 = getOcrWord(1, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWordEntity ocrWord5 = getOcrWord(1, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWordEntity ocrWord6 = getOcrWord(1, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
-	OcrWordEntity ocrWord7 = getOcrWord(2, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWordEntity ocrWord8 = getOcrWord(2, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWordEntity ocrWord9 = getOcrWord(2, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	DummyAuthorDummyBookOcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	DummyAuthorDummyBookOcrWordEntity ocrWord2 =
+		getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	DummyAuthorDummyBookOcrWordEntity ocrWord3 =
+		getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	DummyAuthorDummyBookOcrWordEntity ocrWord4 = getOcrWord(1, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	DummyAuthorDummyBookOcrWordEntity ocrWord5 =
+		getOcrWord(1, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	DummyAuthorDummyBookOcrWordEntity ocrWord6 =
+		getOcrWord(1, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	DummyAuthorDummyBookOcrWordEntity ocrWord7 = getOcrWord(2, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	DummyAuthorDummyBookOcrWordEntity ocrWord8 =
+		getOcrWord(2, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	DummyAuthorDummyBookOcrWordEntity ocrWord9 =
+		getOcrWord(2, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 
-	List<OcrWordEntity> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3, ocrWord4, ocrWord5,
-		ocrWord6, ocrWord7, ocrWord8, ocrWord9);
+	List<DummyAuthorDummyBookOcrWordEntity> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3,
+		ocrWord4, ocrWord5, ocrWord6, ocrWord7, ocrWord8, ocrWord9);
 
-	List<OcrWordEntity> expected = Arrays.asList(ocrWord1, ocrWord3);
+	List<DummyAuthorDummyBookOcrWordEntity> expected = Arrays.asList(ocrWord1, ocrWord3);
 
 	toBeInserted.forEach(ocrWord -> testClass.addOcrWord(ocrWord));
 
@@ -139,18 +153,24 @@ class OcrWordServiceImplIntegrationTest {
     @Test
     void testGetWordCount() {
 	// given
-	OcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWordEntity ocrWord2 = getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWordEntity ocrWord3 = getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
-	OcrWordEntity ocrWord4 = getOcrWord(1, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWordEntity ocrWord5 = getOcrWord(1, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWordEntity ocrWord6 = getOcrWord(1, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
-	OcrWordEntity ocrWord7 = getOcrWord(2, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
-	OcrWordEntity ocrWord8 = getOcrWord(2, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
-	OcrWordEntity ocrWord9 = getOcrWord(2, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	DummyAuthorDummyBookOcrWordEntity ocrWord1 = getOcrWord(1, 1, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	DummyAuthorDummyBookOcrWordEntity ocrWord2 =
+		getOcrWord(1, 1, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	DummyAuthorDummyBookOcrWordEntity ocrWord3 =
+		getOcrWord(1, 1, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	DummyAuthorDummyBookOcrWordEntity ocrWord4 = getOcrWord(1, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	DummyAuthorDummyBookOcrWordEntity ocrWord5 =
+		getOcrWord(1, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	DummyAuthorDummyBookOcrWordEntity ocrWord6 =
+		getOcrWord(1, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
+	DummyAuthorDummyBookOcrWordEntity ocrWord7 = getOcrWord(2, 2, 11, 22, 33, 44, 55.55f, "ABC123", 1);
+	DummyAuthorDummyBookOcrWordEntity ocrWord8 =
+		getOcrWord(2, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
+	DummyAuthorDummyBookOcrWordEntity ocrWord9 =
+		getOcrWord(2, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 
-	List<OcrWordEntity> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3, ocrWord4, ocrWord5,
-		ocrWord6, ocrWord7, ocrWord8, ocrWord9);
+	List<DummyAuthorDummyBookOcrWordEntity> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3,
+		ocrWord4, ocrWord5, ocrWord6, ocrWord7, ocrWord8, ocrWord9);
 
 	toBeInserted.forEach(ocrWord -> testClass.addOcrWord(ocrWord));
 
@@ -161,18 +181,18 @@ class OcrWordServiceImplIntegrationTest {
 	assertEquals(2, result);
     }
 
-    private RowMapper<OcrWordEntity> ocrWordMapper() {
+    private RowMapper<DummyAuthorDummyBookOcrWordEntity> ocrWordMapper() {
 	return (ResultSet res, int rowNum) -> {
-	    OcrWordEntity ocrWord = getOcrWord(1, 1, res.getInt("x1"), res.getInt("y1"), res.getInt("x2"),
-		    res.getInt("y2"), res.getFloat("confidence"), res.getString("raw_text"),
+	    DummyAuthorDummyBookOcrWordEntity ocrWord = getOcrWord(1, 1, res.getInt("x1"), res.getInt("y1"),
+		    res.getInt("x2"), res.getInt("y2"), res.getFloat("confidence"), res.getString("raw_text"),
 		    res.getInt("word_sequence_id"));
 	    return ocrWord;
 	};
     }
 
-    private OcrWordEntity getOcrWord(int bookId, int pageImageId, int x1, int y1, int x2, int y2,
-	    float confidence, String rawText, int wordSequenceId) {
-	OcrWordEntity ocrWord = new OcrWordEntity();
+    private DummyAuthorDummyBookOcrWordEntity getOcrWord(int bookId, int pageImageId, int x1, int y1, int x2,
+	    int y2, float confidence, String rawText, int wordSequenceId) {
+	DummyAuthorDummyBookOcrWordEntity ocrWord = new DummyAuthorDummyBookOcrWordEntity();
 	ocrWord.setX1(x1);
 	ocrWord.setY1(y1);
 	ocrWord.setX2(x2);

@@ -7,13 +7,13 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
-import com.swayam.ocr.porua.tesseract.model.OcrWordEntity;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
+import com.swayam.ocr.porua.tesseract.model.dynamic.DummyAuthorDummyBookOcrWordEntity;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepositoryTemplate;
 
 @Repository("com.swayam.ocr.porua.tesseract.repo.dynamic.DummyAuthorDummyBookOcrWordRepository")
 public interface DummyAuthorDummyBookOcrWordRepository
-	extends CrudRepository<OcrWordEntity, Long>, OcrWordRepositoryTemplate {
+	extends CrudRepository<DummyAuthorDummyBookOcrWordEntity, Long>, OcrWordRepositoryTemplate {
 
     @Override
     Optional<OcrWord> findByOcrWordId(OcrWordId ocrWordId);
