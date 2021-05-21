@@ -25,14 +25,17 @@ import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.swayam.ocr.porua.tesseract.model.Book;
-import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntity;
+import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
+import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.service.EntityClassUtil;
 import com.swayam.ocr.porua.tesseract.service.EntityClassUtil.EntityClassDetails;
@@ -43,6 +46,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeDescription.Generic;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.FieldAccessor;
+import net.bytebuddy.matcher.ElementMatchers;
 
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcessor {
@@ -50,6 +54,8 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     public static final String ENTITY_PACKAGE = Book.class.getPackageName();
 
     private static final String OCR_WORD_TABLE_SUFFIX = "_ocr_word";
+
+    private static final String CORRECTED_WORD_TABLE_SUFFIX = "_corrected_word";
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
@@ -83,17 +89,31 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	    }
 	    EntityClassDetails entityClassDetails =
 		    new EntityClassUtil().getEntityClassDetails(baseTableName);
-	    createOcrWordEntity(baseTableName, entityClassDetails.getOcrWordEntity());
+	    createCorrectedWordEntity(baseTableName, entityClassDetails.getCorrectedWordEntity());
+	    try {
+		createOcrWordEntity(baseTableName, entityClassDetails.getOcrWordEntity(),
+			entityClassDetails.getCorrectedWordEntity());
+	    } catch (ClassNotFoundException | IOException e) {
+		throw new RuntimeException(e);
+	    }
 	    try {
 		createOcrWordRepository(entityClassDetails.getOcrWordEntityRepository(),
 			entityClassDetails.getOcrWordEntity());
 	    } catch (ClassNotFoundException | IOException e) {
 		throw new RuntimeException(e);
 	    }
+
+	    try {
+		createCorrectedWordRepository(entityClassDetails.getCorrectedWordEntityRepository(),
+			entityClassDetails.getCorrectedWordEntity());
+	    } catch (ClassNotFoundException | IOException e) {
+		throw new RuntimeException(e);
+	    }
+
 	}
     }
 
-    private void createOcrWordEntity(String baseTableName, String entityClassName) throws IOException {
+    private void createCorrectedWordEntity(String baseTableName, String entityClassName) throws IOException {
 
 	if (classFileExists(entityClassName)) {
 	    System.out.println("The class " + entityClassName + " already exists, not creating a new one");
@@ -102,7 +122,49 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
 	System.out.println("Creating new class: " + entityClassName);
 
-	new ByteBuddy().subclass(OcrWordEntityTemplate.class).annotateType(new Entity() {
+	new ByteBuddy().subclass(CorrectedWordEntityTemplate.class)
+		.annotateType(getEntityAnnotation(),
+			getTableAnnotation(baseTableName + CORRECTED_WORD_TABLE_SUFFIX))
+		.name(entityClassName).make()
+		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
+		.saveIn(getBaseLocation());
+
+    }
+
+    private void createOcrWordEntity(String baseTableName, String entityClassName, String correctedWordEntity)
+	    throws IOException, ClassNotFoundException {
+
+	if (classFileExists(entityClassName)) {
+	    System.out.println("The class " + entityClassName + " already exists, not creating a new one");
+	    return;
+	}
+
+	System.out.println("Creating new class: " + entityClassName);
+
+	Class<?> correctedEntityClass = Class.forName(correctedWordEntity);
+
+	new ByteBuddy().subclass(OcrWordEntityTemplate.class)
+		.annotateType(getEntityAnnotation(),
+			getTableAnnotation(baseTableName + OCR_WORD_TABLE_SUFFIX))
+		.defineField("correctedWords",
+			TypeDescription.Generic.Builder.parameterizedType(List.class, correctedEntityClass)
+				.build(),
+			Modifier.PRIVATE)
+		.annotateField(AnnotationDescription.Builder.ofType(OneToMany.class)
+			.define("fetch", FetchType.LAZY).define("mappedBy", "ocrWordId").build())
+		.annotateField(AnnotationDescription.Builder.ofType(JsonIgnore.class).build())
+		.defineMethod("getCorrectedWords",
+			TypeDescription.Generic.Builder.parameterizedType(List.class, correctedEntityClass)
+				.build(),
+			Modifier.PUBLIC)
+		.intercept(FieldAccessor.ofBeanProperty()).name(entityClassName).make()
+		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
+		.saveIn(getBaseLocation());
+
+    }
+
+    private Entity getEntityAnnotation() {
+	return new Entity() {
 
 	    @Override
 	    public Class<? extends Annotation> annotationType() {
@@ -113,7 +175,11 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	    public String name() {
 		return "";
 	    }
-	}, new Table() {
+	};
+    }
+
+    private Table getTableAnnotation(String tableName) {
+	return new Table() {
 
 	    @Override
 	    public Class<? extends Annotation> annotationType() {
@@ -132,7 +198,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
 	    @Override
 	    public String name() {
-		return baseTableName + OCR_WORD_TABLE_SUFFIX;
+		return tableName;
 	    }
 
 	    @Override
@@ -144,21 +210,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	    public String catalog() {
 		return "";
 	    }
-	}).defineField("correctedWords",
-		TypeDescription.Generic.Builder.parameterizedType(List.class, CorrectedWordEntity.class)
-			.build(),
-		Modifier.PRIVATE)
-		.annotateField(AnnotationDescription.Builder.ofType(OneToMany.class)
-			.define("fetch", FetchType.LAZY).define("mappedBy", "ocrWordId").build())
-		.annotateField(AnnotationDescription.Builder.ofType(JsonIgnore.class).build())
-		.defineMethod("getCorrectedWords",
-			TypeDescription.Generic.Builder
-				.parameterizedType(List.class, CorrectedWordEntity.class).build(),
-			Modifier.PUBLIC)
-		.intercept(FieldAccessor.ofBeanProperty()).name(entityClassName).make()
-		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
-		.saveIn(getBaseLocation());
-
+	};
     }
 
     private void createOcrWordRepository(String repositoryClassName, String entityClassName)
@@ -169,21 +221,53 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	Generic crudRepo = Generic.Builder
 		.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
 	new ByteBuddy().makeInterface(crudRepo).implement(OcrWordRepositoryTemplate.class)
-		.annotateType(new Repository() {
-
-		    @Override
-		    public Class<? extends Annotation> annotationType() {
-			return Repository.class;
-		    }
-
-		    @Override
-		    public String value() {
-			return repositoryClassName;
-		    }
-		}).name(repositoryClassName).make()
+		.annotateType(getRepositoryAnnotation(repositoryClassName)).name(repositoryClassName).make()
 		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
 		.saveIn(getBaseLocation());
 
+    }
+
+    private void createCorrectedWordRepository(String repositoryClassName, String entityClassName)
+	    throws IOException, ClassNotFoundException {
+	if (classFileExists(repositoryClassName)) {
+	    return;
+	}
+	Generic crudRepo = Generic.Builder
+		.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
+	new ByteBuddy().makeInterface(crudRepo).implement(CorrectedWordRepositoryTemplate.class)
+		.annotateType(getRepositoryAnnotation(repositoryClassName))
+		.method(ElementMatchers.named("updateCorrectedText")).withoutCode()
+		.annotateMethod(AnnotationDescription.Builder.ofType(Modifying.class).build())
+		.annotateMethod(AnnotationDescription.Builder.ofType(Query.class).define("value", "update "
+			+ entityClassName
+			+ " set correctedText = :correctedText where ocrWordId = :ocrWordId and user = :user")
+			.build())
+		.method(ElementMatchers.named("markAsIgnored")).withoutCode()
+		.annotateMethod(AnnotationDescription.Builder.ofType(Modifying.class).build())
+		.annotateMethod(AnnotationDescription.Builder.ofType(Query.class)
+			.define("value",
+				"update " + entityClassName
+					+ " set ignored = TRUE where ocrWordId = :ocrWordId and user = :user")
+			.build())
+		.name(repositoryClassName).make()
+		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
+		.saveIn(getBaseLocation());
+
+    }
+
+    private Repository getRepositoryAnnotation(String repositoryClassName) {
+	return new Repository() {
+
+	    @Override
+	    public Class<? extends Annotation> annotationType() {
+		return Repository.class;
+	    }
+
+	    @Override
+	    public String value() {
+		return repositoryClassName;
+	    }
+	};
     }
 
     private boolean classFileExists(String className) {
