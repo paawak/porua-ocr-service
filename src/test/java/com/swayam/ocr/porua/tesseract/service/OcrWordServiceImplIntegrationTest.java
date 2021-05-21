@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -152,7 +153,12 @@ class OcrWordServiceImplIntegrationTest {
 	List<DummyAuthorDummyBookOcrWordEntity> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3,
 		ocrWord4, ocrWord5, ocrWord6, ocrWord7, ocrWord8, ocrWord9);
 
-	List<DummyAuthorDummyBookOcrWordEntity> expected = Arrays.asList(ocrWord1, ocrWord3);
+	OcrWordOutputDto outputDto1 = new OcrWordOutputDto();
+	BeanUtils.copyProperties(ocrWord1, outputDto1);
+	OcrWordOutputDto outputDto3 = new OcrWordOutputDto();
+	BeanUtils.copyProperties(ocrWord3, outputDto3);
+
+	List<OcrWordOutputDto> expected = Arrays.asList(outputDto1, outputDto3);
 
 	toBeInserted.forEach(ocrWord -> testClass.addOcrWord(ocrWord));
 
