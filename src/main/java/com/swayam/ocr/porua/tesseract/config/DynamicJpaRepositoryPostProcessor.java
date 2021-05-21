@@ -58,7 +58,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
 	System.out.println("Start creating dynamic JPA Repos...");
 	try {
-	    createEntities(environment.getProperty("spring.datasource.url"),
+	    createEntitiesAndRepos(environment.getProperty("spring.datasource.url"),
 		    environment.getProperty("spring.datasource.username"),
 		    environment.getProperty("spring.datasource.password"));
 	} catch (SQLException | IOException e) {
@@ -66,7 +66,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	}
     }
 
-    private void createEntities(String dbUrl, String dbUser, String dbPassword)
+    private void createEntitiesAndRepos(String dbUrl, String dbUser, String dbPassword)
 	    throws SQLException, IOException {
 	Connection con = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
 	PreparedStatement pStat;
@@ -110,6 +110,12 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	}
     }
 
+    /**
+     * Creates an instance of {@link CorrectedWordEntityTemplate} dynamically.
+     * The generated class looks like
+     * {@link DummyAuthorDummyBookCorrectedWordEntity} in the <em>test</em>
+     * folder.
+     */
     private void createCorrectedWordEntity(String baseTableName, String entityClassName) throws IOException {
 
 	if (classFileExists(entityClassName)) {
@@ -128,6 +134,11 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
     }
 
+    /**
+     * Creates an instance of {@link OcrWordEntityTemplate} dynamically. The
+     * generated class looks like {@link DummyAuthorDummyBookOcrWordEntity} in
+     * the <em>test</em> folder.
+     */
     private void createOcrWordEntity(String baseTableName, String entityClassName, String correctedWordEntity)
 	    throws IOException, ClassNotFoundException {
 
@@ -168,6 +179,12 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	return AnnotationDescription.Builder.ofType(Table.class).define("name", tableName).build();
     }
 
+    /**
+     * Creates a child interface of {@link OcrWordRepositoryTemplate}
+     * dynamically. The generated class looks like
+     * {@link DummyAuthorDummyBookOcrWordRepository} in the <em>test</em>
+     * folder.
+     */
     private void createOcrWordRepository(String repositoryClassName, String entityClassName)
 	    throws IOException, ClassNotFoundException {
 	if (classFileExists(repositoryClassName)) {
@@ -182,6 +199,12 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
     }
 
+    /**
+     * Creates a child interface of {@link CorrectedWordRepositoryTemplate}
+     * dynamically. The generated class looks like
+     * {@link DummyAuthorDummyBookCorrectedWordRepository} in the <em>test</em>
+     * folder.
+     */
     private void createCorrectedWordRepository(String repositoryClassName, String entityClassName)
 	    throws IOException, ClassNotFoundException {
 	if (classFileExists(repositoryClassName)) {
