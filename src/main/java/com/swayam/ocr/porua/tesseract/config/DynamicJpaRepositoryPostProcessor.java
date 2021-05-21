@@ -2,7 +2,6 @@ package com.swayam.ocr.porua.tesseract.config;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -15,10 +14,8 @@ import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.Index;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
@@ -163,54 +160,12 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
     }
 
-    private Entity getEntityAnnotation() {
-	return new Entity() {
-
-	    @Override
-	    public Class<? extends Annotation> annotationType() {
-		return Entity.class;
-	    }
-
-	    @Override
-	    public String name() {
-		return "";
-	    }
-	};
+    private AnnotationDescription getEntityAnnotation() {
+	return AnnotationDescription.Builder.ofType(Entity.class).build();
     }
 
-    private Table getTableAnnotation(String tableName) {
-	return new Table() {
-
-	    @Override
-	    public Class<? extends Annotation> annotationType() {
-		return Table.class;
-	    }
-
-	    @Override
-	    public UniqueConstraint[] uniqueConstraints() {
-		return new UniqueConstraint[0];
-	    }
-
-	    @Override
-	    public String schema() {
-		return "";
-	    }
-
-	    @Override
-	    public String name() {
-		return tableName;
-	    }
-
-	    @Override
-	    public Index[] indexes() {
-		return new Index[0];
-	    }
-
-	    @Override
-	    public String catalog() {
-		return "";
-	    }
-	};
+    private AnnotationDescription getTableAnnotation(String tableName) {
+	return AnnotationDescription.Builder.ofType(Table.class).define("name", tableName).build();
     }
 
     private void createOcrWordRepository(String repositoryClassName, String entityClassName)
@@ -255,19 +210,9 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
     }
 
-    private Repository getRepositoryAnnotation(String repositoryClassName) {
-	return new Repository() {
-
-	    @Override
-	    public Class<? extends Annotation> annotationType() {
-		return Repository.class;
-	    }
-
-	    @Override
-	    public String value() {
-		return repositoryClassName;
-	    }
-	};
+    private AnnotationDescription getRepositoryAnnotation(String repositoryClassName) {
+	return AnnotationDescription.Builder.ofType(Repository.class).define("value", repositoryClassName)
+		.build();
     }
 
     private boolean classFileExists(String className) {
