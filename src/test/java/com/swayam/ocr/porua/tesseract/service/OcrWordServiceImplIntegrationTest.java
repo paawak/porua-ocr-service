@@ -39,10 +39,14 @@ class OcrWordServiceImplIntegrationTest {
     @BeforeEach
     void setupBookAndRawImage() {
 	jdbcTemplate.execute("TRUNCATE TABLE book");
-	jdbcTemplate.update("INSERT INTO book (id, name, language) VALUES (1, 'TEST BOOK 1', 'ben')");
-	jdbcTemplate.update("INSERT INTO book (id, name, language) VALUES (2, 'TEST BOOK 2', 'eng')");
-	jdbcTemplate.update("INSERT INTO page_image (id, book_id, name, page_number) VALUES (1, 1, 'TEST IMAGE 1.jpg', 1)");
-	jdbcTemplate.update("INSERT INTO page_image (id, book_id, name, page_number) VALUES (2, 1, 'TEST IMAGE 2.jpg', 2)");
+	jdbcTemplate.update(
+		"INSERT INTO book (id, name, language, base_table_name) VALUES (1, 'TEST BOOK 1', 'ben', 'dummy_author_dummy_book')");
+	jdbcTemplate.update(
+		"INSERT INTO book (id, name, language, base_table_name) VALUES (2, 'TEST BOOK 2', 'eng', 'dummy_author_dummy_book')");
+	jdbcTemplate.update(
+		"INSERT INTO page_image (id, book_id, name, page_number) VALUES (1, 1, 'TEST IMAGE 1.jpg', 1)");
+	jdbcTemplate.update(
+		"INSERT INTO page_image (id, book_id, name, page_number) VALUES (2, 1, 'TEST IMAGE 2.jpg', 2)");
     }
 
     @Test
@@ -118,7 +122,8 @@ class OcrWordServiceImplIntegrationTest {
 	OcrWordEntity ocrWord8 = getOcrWord(2, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
 	OcrWordEntity ocrWord9 = getOcrWord(2, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 
-	List<OcrWordEntity> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3, ocrWord4, ocrWord5, ocrWord6, ocrWord7, ocrWord8, ocrWord9);
+	List<OcrWordEntity> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3, ocrWord4, ocrWord5,
+		ocrWord6, ocrWord7, ocrWord8, ocrWord9);
 
 	List<OcrWordEntity> expected = Arrays.asList(ocrWord1, ocrWord3);
 
@@ -144,7 +149,8 @@ class OcrWordServiceImplIntegrationTest {
 	OcrWordEntity ocrWord8 = getOcrWord(2, 2, 111, 222, 333, 444, 555.555f, "DEF456", 2);
 	OcrWordEntity ocrWord9 = getOcrWord(2, 2, 1111, 2222, 3333, 4444, 5555.5555f, "GHI789", 3);
 
-	List<OcrWordEntity> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3, ocrWord4, ocrWord5, ocrWord6, ocrWord7, ocrWord8, ocrWord9);
+	List<OcrWordEntity> toBeInserted = Arrays.asList(ocrWord1, ocrWord2, ocrWord3, ocrWord4, ocrWord5,
+		ocrWord6, ocrWord7, ocrWord8, ocrWord9);
 
 	toBeInserted.forEach(ocrWord -> testClass.addOcrWord(ocrWord));
 
@@ -157,13 +163,15 @@ class OcrWordServiceImplIntegrationTest {
 
     private RowMapper<OcrWordEntity> ocrWordMapper() {
 	return (ResultSet res, int rowNum) -> {
-	    OcrWordEntity ocrWord =
-		    getOcrWord(1, 1, res.getInt("x1"), res.getInt("y1"), res.getInt("x2"), res.getInt("y2"), res.getFloat("confidence"), res.getString("raw_text"), res.getInt("word_sequence_id"));
+	    OcrWordEntity ocrWord = getOcrWord(1, 1, res.getInt("x1"), res.getInt("y1"), res.getInt("x2"),
+		    res.getInt("y2"), res.getFloat("confidence"), res.getString("raw_text"),
+		    res.getInt("word_sequence_id"));
 	    return ocrWord;
 	};
     }
 
-    private OcrWordEntity getOcrWord(int bookId, int pageImageId, int x1, int y1, int x2, int y2, float confidence, String rawText, int wordSequenceId) {
+    private OcrWordEntity getOcrWord(int bookId, int pageImageId, int x1, int y1, int x2, int y2,
+	    float confidence, String rawText, int wordSequenceId) {
 	OcrWordEntity ocrWord = new OcrWordEntity();
 	ocrWord.setX1(x1);
 	ocrWord.setY1(y1);
