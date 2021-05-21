@@ -33,11 +33,14 @@ class PageServiceImplIntegrationTest {
 
     @BeforeEach
     void setupBookAndRawImage() {
+	jdbcTemplate.execute("TRUNCATE TABLE page_image");
 	jdbcTemplate.execute("TRUNCATE TABLE book");
 	jdbcTemplate.update("INSERT INTO book (id, name, language) VALUES (1, 'TEST BOOK 1', 'ben')");
 	jdbcTemplate.update("INSERT INTO book (id, name, language) VALUES (2, 'TEST BOOK 2', 'eng')");
-	jdbcTemplate.update("INSERT INTO page_image (id, book_id, name, page_number) VALUES (1, 1, 'TEST IMAGE 1.jpg', 1)");
-	jdbcTemplate.update("INSERT INTO page_image (id, book_id, name, page_number) VALUES (2, 1, 'TEST IMAGE 2.jpg', 2)");
+	jdbcTemplate.update(
+		"INSERT INTO page_image (id, book_id, name, page_number) VALUES (1, 1, 'TEST IMAGE 1.jpg', 1)");
+	jdbcTemplate.update(
+		"INSERT INTO page_image (id, book_id, name, page_number) VALUES (2, 1, 'TEST IMAGE 2.jpg', 2)");
     }
 
     @Test
@@ -192,9 +195,11 @@ class PageServiceImplIntegrationTest {
 
 	// then
 	assertEquals(1, result);
-	Boolean ignored = jdbcTemplate.queryForObject("select ignored from page_image where id = ?", Boolean.class, 1);
+	Boolean ignored =
+		jdbcTemplate.queryForObject("select ignored from page_image where id = ?", Boolean.class, 1);
 	assertTrue(ignored);
-	Boolean completed = jdbcTemplate.queryForObject("select correction_completed from page_image where id = ?", Boolean.class, 1);
+	Boolean completed = jdbcTemplate
+		.queryForObject("select correction_completed from page_image where id = ?", Boolean.class, 1);
 	assertFalse(completed);
 	List<PageImage> pages = testClass.getPages(1);
 	assertEquals(Arrays.asList(pageImage2), pages);
@@ -225,9 +230,11 @@ class PageServiceImplIntegrationTest {
 
 	// then
 	assertEquals(1, result);
-	Boolean ignored = jdbcTemplate.queryForObject("select ignored from page_image where id = ?", Boolean.class, 2);
+	Boolean ignored =
+		jdbcTemplate.queryForObject("select ignored from page_image where id = ?", Boolean.class, 2);
 	assertFalse(ignored);
-	Boolean completed = jdbcTemplate.queryForObject("select correction_completed from page_image where id = ?", Boolean.class, 2);
+	Boolean completed = jdbcTemplate
+		.queryForObject("select correction_completed from page_image where id = ?", Boolean.class, 2);
 	assertTrue(completed);
 	List<PageImage> pages = testClass.getPages(1);
 	assertEquals(Arrays.asList(pageImage1), pages);
