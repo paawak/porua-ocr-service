@@ -1,6 +1,9 @@
 package com.swayam.ocr.porua.tesseract.service;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.sql.ResultSet;
 import java.util.Arrays;
@@ -20,6 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
+import com.swayam.ocr.porua.tesseract.model.dynamic.DummyAuthorDummyBookCorrectedWordEntity;
 import com.swayam.ocr.porua.tesseract.model.dynamic.DummyAuthorDummyBookOcrWordEntity;
 import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 
@@ -27,6 +31,9 @@ import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 @ActiveProfiles("test")
 @SpringBootTest
 class OcrWordServiceImplIntegrationTest {
+
+    private static final String CORRECTED_WORD_QUERY =
+	    "SELECT id, user_id, ocr_word_id, corrected_text, ignored  FROM dummy_author_dummy_book_corrected_word";
 
     private static final String SELECT_FROM_OCR_WORD =
 	    "SELECT book_id, page_image_id, word_sequence_id, raw_text, x1, y1, x2, y2, confidence FROM dummy_author_dummy_book_ocr_word ORDER BY word_sequence_id ASC";
@@ -111,10 +118,21 @@ class OcrWordServiceImplIntegrationTest {
 	testClass.updateCorrectTextInOcrWord(new OcrWordId(1, 1, 2), "I have changed", user);
 
 	// then
-	List<DummyAuthorDummyBookOcrWordEntity> results =
+	List<DummyAuthorDummyBookOcrWordEntity> ocrWords =
 		jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
 
-	assertEquals(expected, results);
+	assertEquals(expected, ocrWords);
+
+	List<DummyAuthorDummyBookCorrectedWordEntity> correctedWords =
+		jdbcTemplate.query(CORRECTED_WORD_QUERY, correctedWordMapper());
+
+	assertEquals(1, correctedWords.size());
+	DummyAuthorDummyBookCorrectedWordEntity correctedWord = correctedWords.get(0);
+	assertEquals("I have changed", correctedWord.getCorrectedText());
+	assertEquals(0, correctedWord.getId());
+	assertFalse(correctedWord.isIgnored());
+	assertEquals(1, correctedWord.getOcrWordId());
+	assertEquals(1, correctedWord.getUser().getId());
     }
 
     @Test
@@ -141,6 +159,17 @@ class OcrWordServiceImplIntegrationTest {
 	List<DummyAuthorDummyBookOcrWordEntity> words =
 		jdbcTemplate.query(SELECT_FROM_OCR_WORD, ocrWordMapper());
 	assertEquals(Arrays.asList(ocrWord1, ocrWord2, ocrWord3), words);
+
+	List<DummyAuthorDummyBookCorrectedWordEntity> correctedWords =
+		jdbcTemplate.query(CORRECTED_WORD_QUERY, correctedWordMapper());
+
+	assertEquals(1, correctedWords.size());
+	DummyAuthorDummyBookCorrectedWordEntity correctedWord = correctedWords.get(0);
+	assertNull(correctedWord.getCorrectedText());
+	assertEquals(0, correctedWord.getId());
+	assertTrue(correctedWord.isIgnored());
+	assertEquals(1, correctedWord.getOcrWordId());
+	assertEquals(1, correctedWord.getUser().getId());
     }
 
     @Test
@@ -220,10 +249,22 @@ class OcrWordServiceImplIntegrationTest {
 
     private RowMapper<DummyAuthorDummyBookOcrWordEntity> ocrWordMapper() {
 	return (ResultSet res, int rowNum) -> {
-	    DummyAuthorDummyBookOcrWordEntity ocrWord = getOcrWord(1, 1, res.getInt("x1"), res.getInt("y1"),
-		    res.getInt("x2"), res.getInt("y2"), res.getFloat("confidence"), res.getString("raw_text"),
-		    res.getInt("word_sequence_id"));
-	    return ocrWord;
+	    return getOcrWord(1, 1, res.getInt("x1"), res.getInt("y1"), res.getInt("x2"), res.getInt("y2"),
+		    res.getFloat("confidence"), res.getString("raw_text"), res.getInt("word_sequence_id"));
+	};
+    }
+
+    private RowMapper<DummyAuthorDummyBookCorrectedWordEntity> correctedWordMapper() {
+	return (ResultSet res, int rowNum) -> {
+	    DummyAuthorDummyBookCorrectedWordEntity row = new DummyAuthorDummyBookCorrectedWordEntity();
+	    row.setCorrectedText(res.getString("corrected_text"));
+	    row.setId(res.getInt("id"));
+	    row.setIgnored(res.getBoolean("ignored"));
+	    row.setOcrWordId(res.getInt("ocr_word_id"));
+	    UserDetails user = new UserDetails();
+	    user.setId(res.getInt("user_id"));
+	    row.setUser(user);
+	    return row;
 	};
     }
 
