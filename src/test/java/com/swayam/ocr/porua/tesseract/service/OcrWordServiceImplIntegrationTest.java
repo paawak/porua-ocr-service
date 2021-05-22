@@ -29,7 +29,7 @@ import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 class OcrWordServiceImplIntegrationTest {
 
     private static final String SELECT_FROM_OCR_WORD =
-	    "SELECT book_id, page_image_id, word_sequence_id, raw_text, corrected_text, x1, y1, x2, y2, confidence, ignored FROM ocr_word ORDER BY word_sequence_id ASC";
+	    "SELECT book_id, page_image_id, word_sequence_id, raw_text, x1, y1, x2, y2, confidence FROM dummy_author_dummy_book_ocr_word ORDER BY word_sequence_id ASC";
 
     @Autowired
     private OcrWordServiceImpl testClass;
@@ -41,6 +41,7 @@ class OcrWordServiceImplIntegrationTest {
     void setupBookAndRawImage() {
 	jdbcTemplate.execute("DROP TABLE IF EXISTS dummy_author_dummy_book_ocr_word");
 	jdbcTemplate.execute("DROP TABLE IF EXISTS dummy_author_dummy_book_corrected_word");
+	jdbcTemplate.execute("TRUNCATE TABLE user");
 	jdbcTemplate.execute("TRUNCATE TABLE page_image");
 	jdbcTemplate.execute("TRUNCATE TABLE book");
 
@@ -63,6 +64,9 @@ class OcrWordServiceImplIntegrationTest {
 		"INSERT INTO page_image (id, book_id, name, page_number) VALUES (1, 1, 'TEST IMAGE 1.jpg', 1)");
 	jdbcTemplate.update(
 		"INSERT INTO page_image (id, book_id, name, page_number) VALUES (2, 1, 'TEST IMAGE 2.jpg', 2)");
+
+	jdbcTemplate.execute(
+		"INSERT INTO user (id, name, email, role) VALUES (1, 'Test User', 'testing@gmail.com', 'CORRECTION_ROLE')");
     }
 
     @Test
@@ -100,8 +104,11 @@ class OcrWordServiceImplIntegrationTest {
 	testClass.addOcrWord(ocrWord2);
 	testClass.addOcrWord(ocrWord3);
 
+	UserDetails user = new UserDetails();
+	user.setId(1);
+
 	// when
-	testClass.updateCorrectTextInOcrWord(new OcrWordId(1, 1, 2), "I have changed", new UserDetails());
+	testClass.updateCorrectTextInOcrWord(new OcrWordId(1, 1, 2), "I have changed", user);
 
 	// then
 	List<DummyAuthorDummyBookOcrWordEntity> results =
@@ -123,8 +130,11 @@ class OcrWordServiceImplIntegrationTest {
 	testClass.addOcrWord(ocrWord2);
 	testClass.addOcrWord(ocrWord3);
 
+	UserDetails user = new UserDetails();
+	user.setId(1);
+
 	// when
-	int result = testClass.markWordAsIgnored(new OcrWordId(1, 1, 2), new UserDetails());
+	int result = testClass.markWordAsIgnored(new OcrWordId(1, 1, 2), user);
 
 	// then
 	assertEquals(1, result);
