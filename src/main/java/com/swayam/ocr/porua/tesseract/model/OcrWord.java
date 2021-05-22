@@ -1,47 +1,27 @@
 package com.swayam.ocr.porua.tesseract.model;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import java.util.List;
 
-import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrCorrection;
+public interface OcrWord {
 
-import lombok.Data;
+    long getId();
 
-@Entity
-@Table(name = "ocr_word")
-@Data
-public class OcrWord implements OcrCorrection {
+    OcrWordId getOcrWordId();
 
-    @EmbeddedId
-    private OcrWordId ocrWordId;
+    String getRawText();
 
-    @Column(name = "raw_text")
-    private String rawText;
+    int getX1();
 
-    @Column(name = "corrected_text")
-    private String correctedText;
+    int getY1();
 
-    @Column
-    private int x1;
+    int getX2();
 
-    @Column
-    private int y1;
+    int getY2();
 
-    @Column
-    private int x2;
+    float getConfidence();
 
-    @Column
-    private int y2;
+    Integer getLineNumber();
 
-    @Column
-    private float confidence;
-
-    @Column(name = "line_number")
-    private Integer lineNumber;
-
-    @Column
-    private boolean ignored;
+    List<? extends CorrectedWord> getCorrectedWords();
 
 }

@@ -17,14 +17,15 @@ import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
 import com.swayam.ocr.porua.tesseract.model.Book;
-import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 
 @Service
 public class ImageProcessor {
@@ -32,11 +33,16 @@ public class ImageProcessor {
     private static final String IMAGE_TYPE = "png";
 
     private final TaskExecutor taskExecutor;
-    private final OcrDataStoreService ocrDataStoreService;
+    private final BookService bookService;
+    private final PageService pageService;
+    private final OcrWordService ocrDataStoreService;
     private final String tessDataDirectory;
 
-    public ImageProcessor(TaskExecutor taskExecutor, OcrDataStoreService ocrDataStoreService, @Value("${app.config.ocr.tesseract.tessdata-location}") String tessDataDirectory) {
+    public ImageProcessor(TaskExecutor taskExecutor, BookService bookService, PageService pageService, OcrWordService ocrDataStoreService,
+	    @Value("${app.config.ocr.tesseract.tessdata-location}") String tessDataDirectory) {
 	this.taskExecutor = taskExecutor;
+	this.bookService = bookService;
+	this.pageService = pageService;
 	this.ocrDataStoreService = ocrDataStoreService;
 	this.tessDataDirectory = tessDataDirectory;
     }
@@ -51,7 +57,7 @@ public class ImageProcessor {
 	}
 
 	String pageNameTemplate = fileName.substring(0, fileName.length() - 3) + "_%d." + IMAGE_TYPE;
-	Book book = ocrDataStoreService.getBook(bookId);
+	Book book = bookService.getBook(bookId);
 
 	AtomicInteger pageCount = new AtomicInteger(1);
 
@@ -80,20 +86,24 @@ public class ImageProcessor {
 
     }
 
-    public List<OcrWord> submitPageForAnalysis(final long bookId, final int pageNumber, final String imageFileName, final Path savedImagePath) {
-	Book book = ocrDataStoreService.getBook(bookId);
+    public List<OcrWordOutputDto> submitPageForAnalysis(final long bookId, final int pageNumber, final String imageFileName, final Path savedImagePath) {
+	Book book = bookService.getBook(bookId);
 	return submitPageForAnalysis(book, pageNumber, imageFileName, savedImagePath);
     }
 
-    private List<OcrWord> submitPageForAnalysis(final Book book, final int pageNumber, final String imageFileName, final Path savedImagePath) {
+    private List<OcrWordOutputDto> submitPageForAnalysis(final Book book, final int pageNumber, final String imageFileName, final Path savedImagePath) {
 	PageImage newPageImage = new PageImage();
 	newPageImage.setName(imageFileName);
 	newPageImage.setPageNumber(pageNumber);
 	newPageImage.setBook(book);
-	long imageFileId = ocrDataStoreService.addPageImage(newPageImage).getId();
+	long imageFileId = pageService.addPageImage(newPageImage).getId();
 
 	return new TesseractOcrWordAnalyser(savedImagePath, book.getLanguage(), tessDataDirectory).extractWordsFromImage((wordSequenceId) -> new OcrWordId(book.getId(), imageFileId, wordSequenceId))
-		.stream().map(rawText -> ocrDataStoreService.addOcrWord(rawText)).collect(Collectors.toUnmodifiableList());
+		.stream().map(rawText -> ocrDataStoreService.addOcrWord(rawText)).map(ocrWord -> {
+		    OcrWordOutputDto dto = new OcrWordOutputDto();
+		    BeanUtils.copyProperties(ocrWord, dto);
+		    return dto;
+		}).collect(Collectors.toUnmodifiableList());
 
     }
 

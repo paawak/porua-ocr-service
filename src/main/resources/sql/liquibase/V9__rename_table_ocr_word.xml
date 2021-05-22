@@ -4,12 +4,9 @@
 	xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd"
-	logicalFilePath="V2__hard-coded-books.xml">
-	<changeSet author="Palash Ray" id="2">
-		<insert tableName="book">
-			<column name="id" value="1" />
-			<column name="name" value="Rajshekhar Basu Mahabharat" />
-			<column name="language" value="ben" />
-		</insert>
+	logicalFilePath="V9__rename_table_ocr_word.xml">
+	<changeSet author="Palash Ray" id="9">
+		<renameTable newTableName="rajshekhar_basu_mahabharat_bangla_ocr_word" oldTableName="ocr_word" />
+		<renameTable newTableName="rajshekhar_basu_mahabharat_bangla_corrected_word" oldTableName="corrected_word" />
 	</changeSet>
 </databaseChangeLog>

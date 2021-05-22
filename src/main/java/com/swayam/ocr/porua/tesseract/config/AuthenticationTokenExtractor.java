@@ -15,7 +15,7 @@ public class AuthenticationTokenExtractor implements AuthenticationConverter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationTokenExtractor.class);
 
-    private static final String AUTH_TOKEN_NAME = "Authorization";
+    public static final String AUTH_TOKEN_NAME = "Authorization";
 
     private final RequestMatcher authTokenAsRequestParam;
 

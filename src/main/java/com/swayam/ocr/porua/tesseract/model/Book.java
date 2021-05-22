@@ -23,6 +23,9 @@ public class Book {
     @Column
     private String name;
 
+    @Column(name = "base_table_name")
+    private String baseTableName;
+
     @Column
     @Enumerated(EnumType.STRING)
     private Language language;

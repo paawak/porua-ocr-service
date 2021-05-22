@@ -10,16 +10,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.swayam.ocr.porua.tesseract.model.OcrWord;
-import com.swayam.ocr.porua.tesseract.model.UserDetails;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
 import com.swayam.ocr.porua.tesseract.service.FileSystemUtil;
 import com.swayam.ocr.porua.tesseract.service.ImageProcessor;
 
@@ -39,10 +36,8 @@ public class OCRSubmissionController {
     }
 
     @PostMapping(value = "/image", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<OcrWord> submitPageAndAnalyzeWords(@AuthenticationPrincipal Authentication authentication, @RequestParam("bookId") final Long bookId,
-	    @RequestParam("pageNumber") final Integer pageNumber, @RequestParam("image") final MultipartFile image) throws IOException, URISyntaxException {
-	UserDetails userDetails = (UserDetails) authentication.getDetails();
-	LOG.debug("**************** details: {}", userDetails);
+    public List<OcrWordOutputDto> submitPageAndAnalyzeWords(@RequestParam("bookId") final Long bookId, @RequestParam("pageNumber") final Integer pageNumber,
+	    @RequestParam("image") final MultipartFile image) throws IOException, URISyntaxException {
 
 	String imageFileName = image.getOriginalFilename();
 	LOG.info("BookId: {}, PageNumber: {}, Uploaded fileName: {}", bookId, pageNumber, imageFileName);

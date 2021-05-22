@@ -33,8 +33,10 @@ import org.bytedeco.tesseract.global.tesseract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.swayam.ocr.porua.tesseract.model.CorrectedWord;
 import com.swayam.ocr.porua.tesseract.model.Language;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
+import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 
 import lombok.Value;
@@ -56,7 +58,8 @@ public class TesseractOcrWordAnalyser {
     public List<OcrWord> extractWordsFromImage(Function<Integer, OcrWordId> ocrWordIdGenerator) {
 	LOGGER.info("Image file to analyse with Tesseract OCR: {}", imagePath);
 
-	LOGGER.info("Analyzing image file for words with language {} and TESSDATA {}", language.name(), tessDataDirectory);
+	LOGGER.info("Analyzing image file for words with language {} and TESSDATA {}", language.name(),
+		tessDataDirectory);
 
 	List<OcrWord> ocrWords = new ArrayList<>();
 
@@ -94,7 +97,12 @@ public class TesseractOcrWordAnalyser {
 			throw new IllegalArgumentException("Could not find any rectangle here");
 		    }
 
-		    OcrWord ocrWord = new OcrWord();
+		    OcrWordEntityTemplate ocrWord = new OcrWordEntityTemplate() {
+			@Override
+			public List<? extends CorrectedWord> getCorrectedWords() {
+			    return Collections.emptyList();
+			}
+		    };
 		    ocrWord.setX1(x1.get());
 		    ocrWord.setY1(y1.get());
 		    ocrWord.setX2(x2.get());
@@ -125,68 +133,87 @@ public class TesseractOcrWordAnalyser {
 	return ocrWords;
     }
 
-    public List<String> getBoxStrings(Map<Integer, String> correctTextLookupBySequenceNumber, Collection<OcrWord> rawOcrWords) {
+    public List<String> getBoxStrings(Map<Integer, String> correctTextLookupBySequenceNumber,
+	    Collection<OcrWord> rawOcrWords) {
 	LOGGER.trace("words: {}", rawOcrWords);
 	ExtractedLineDetails extractedLineDetails = extractLinesFromImage();
 	List<RawOcrLine> lines = extractedLineDetails.lines;
 
 	LOGGER.trace("lines: {}", lines);
 
-	Map<Integer, RawOcrLine> linesAsMap = lines.parallelStream().collect(Collectors.toMap(RawOcrLine::getLineNumber, Function.identity()));
+	Map<Integer, RawOcrLine> linesAsMap = lines.parallelStream()
+		.collect(Collectors.toMap(RawOcrLine::getLineNumber, Function.identity()));
 
-	Map<Integer, List<OcrWord>> wordsGroupedByLineNumber = lines.parallelStream().collect(Collectors.toMap(RawOcrLine::getLineNumber, line -> {
-	    return rawOcrWords.parallelStream().filter(rawOcrText -> {
-		Rectangle originalLineArea = getWordArea(line.getX1(), line.getY1(), line.getX2(), line.getY2());
-		int expandBy = 5;
-		Rectangle expandedLineArea = new Rectangle(originalLineArea.x - expandBy, originalLineArea.y - expandBy, originalLineArea.width + expandBy, originalLineArea.height + expandBy);
-		return expandedLineArea.contains(getWordArea(rawOcrText));
-	    }).collect(Collectors.toList());
-	}));
+	Map<Integer, List<OcrWord>> wordsGroupedByLineNumber =
+		lines.parallelStream().collect(Collectors.toMap(RawOcrLine::getLineNumber, line -> {
+		    return rawOcrWords.parallelStream().filter(rawOcrText -> {
+			Rectangle originalLineArea =
+				getWordArea(line.getX1(), line.getY1(), line.getX2(), line.getY2());
+			int expandBy = 5;
+			Rectangle expandedLineArea = new Rectangle(originalLineArea.x - expandBy,
+				originalLineArea.y - expandBy, originalLineArea.width + expandBy,
+				originalLineArea.height + expandBy);
+			return expandedLineArea.contains(getWordArea(rawOcrText));
+		    }).collect(Collectors.toList());
+		}));
 
 	LOGGER.trace("wordsGroupedByLineNumber: {}", wordsGroupedByLineNumber);
 
-	return linesAsMap.keySet().stream().sorted().filter(lineNumber -> !wordsGroupedByLineNumber.get(lineNumber).isEmpty()).flatMap(lineNumber -> {
+	return linesAsMap.keySet().stream().sorted()
+		.filter(lineNumber -> !wordsGroupedByLineNumber.get(lineNumber).isEmpty())
+		.flatMap(lineNumber -> {
 
-	    Supplier<Stream<OcrWord>> ocrWords = () -> wordsGroupedByLineNumber.get(lineNumber).parallelStream();
-	    Supplier<IntStream> wordSequenceNumbers = () -> ocrWords.get().mapToInt(ocrWord -> ocrWord.getOcrWordId().getWordSequenceId());
+		    Supplier<Stream<OcrWord>> ocrWords =
+			    () -> wordsGroupedByLineNumber.get(lineNumber).parallelStream();
+		    Supplier<IntStream> wordSequenceNumbers = () -> ocrWords.get()
+			    .mapToInt(ocrWord -> ocrWord.getOcrWordId().getWordSequenceId());
 
-	    int firstWordSequence = wordSequenceNumbers.get().min().getAsInt();
-	    int lastWordSequence = wordSequenceNumbers.get().max().getAsInt();
+		    int firstWordSequence = wordSequenceNumbers.get().min().getAsInt();
+		    int lastWordSequence = wordSequenceNumbers.get().max().getAsInt();
 
-	    Function<Integer, OcrWord> findWordFromSequenceNumber = sequenceNumber -> ocrWords.get().filter(ocrWord -> ocrWord.getOcrWordId().getWordSequenceId() == sequenceNumber).findAny().get();
+		    Function<Integer, OcrWord> findWordFromSequenceNumber = sequenceNumber -> ocrWords.get()
+			    .filter(ocrWord -> ocrWord.getOcrWordId().getWordSequenceId() == sequenceNumber)
+			    .findAny().get();
 
-	    OcrWord firstWord = findWordFromSequenceNumber.apply(firstWordSequence);
-	    OcrWord lastWord = findWordFromSequenceNumber.apply(lastWordSequence);
+		    OcrWord firstWord = findWordFromSequenceNumber.apply(firstWordSequence);
+		    OcrWord lastWord = findWordFromSequenceNumber.apply(lastWordSequence);
 
-	    int leftTopX = firstWord.getX1();
-	    int leftTopY = linesAsMap.get(lineNumber).getY1();
-	    int rightBottomX = lastWord.getX2();
-	    int rightBottomY = linesAsMap.get(lineNumber).getY2();
+		    int leftTopX = firstWord.getX1();
+		    int leftTopY = linesAsMap.get(lineNumber).getY1();
+		    int rightBottomX = lastWord.getX2();
+		    int rightBottomY = linesAsMap.get(lineNumber).getY2();
 
-	    int leftBottomX = leftTopX;
-	    int leftBottomY = extractedLineDetails.imageHeight - rightBottomY;
-	    // +5 pixels to be on the safer side
-	    int rightTopX = rightBottomX + 5;
-	    int rightTopY = extractedLineDetails.imageHeight - leftTopY;
+		    int leftBottomX = leftTopX;
+		    int leftBottomY = extractedLineDetails.imageHeight - rightBottomY;
+		    // +5 pixels to be on the safer side
+		    int rightTopX = rightBottomX + 5;
+		    int rightTopY = extractedLineDetails.imageHeight - leftTopY;
 
-	    String positionData = String.format(" %d %d %d %d 0", leftBottomX, leftBottomY, rightTopX, rightTopY);
+		    String positionData =
+			    String.format(" %d %d %d %d 0", leftBottomX, leftBottomY, rightTopX, rightTopY);
 
-	    List<String> boxes = ocrWords.get().sorted((OcrWord o1, OcrWord o2) -> o1.getOcrWordId().getWordSequenceId() - o2.getOcrWordId().getWordSequenceId()).map(rawOcrText -> {
-		String ocrText;
-		// lookup for corrected text
-		if (correctTextLookupBySequenceNumber.containsKey(rawOcrText.getOcrWordId().getWordSequenceId())) {
-		    ocrText = correctTextLookupBySequenceNumber.get(rawOcrText.getOcrWordId().getWordSequenceId());
-		} else {
-		    ocrText = rawOcrText.getRawText();
-		}
-		if (lastWordSequence == rawOcrText.getOcrWordId().getWordSequenceId()) {
-		    return ocrText;
-		}
-		return ocrText + " ";
-	    }).flatMap(text -> text.chars().mapToObj(c -> Character.toString((char) c))).map(text -> text + positionData).collect(Collectors.toList());
-	    boxes.add("\t" + positionData);
-	    return boxes.stream();
-	}).collect(Collectors.toList());
+		    List<String> boxes = ocrWords.get()
+			    .sorted((OcrWord o1, OcrWord o2) -> o1.getOcrWordId().getWordSequenceId()
+				    - o2.getOcrWordId().getWordSequenceId())
+			    .map(rawOcrText -> {
+				String ocrText;
+				// lookup for corrected text
+				if (correctTextLookupBySequenceNumber
+					.containsKey(rawOcrText.getOcrWordId().getWordSequenceId())) {
+				    ocrText = correctTextLookupBySequenceNumber
+					    .get(rawOcrText.getOcrWordId().getWordSequenceId());
+				} else {
+				    ocrText = rawOcrText.getRawText();
+				}
+				if (lastWordSequence == rawOcrText.getOcrWordId().getWordSequenceId()) {
+				    return ocrText;
+				}
+				return ocrText + " ";
+			    }).flatMap(text -> text.chars().mapToObj(c -> Character.toString((char) c)))
+			    .map(text -> text + positionData).collect(Collectors.toList());
+		    boxes.add("\t" + positionData);
+		    return boxes.stream();
+		}).collect(Collectors.toList());
     }
 
     private ExtractedLineDetails extractLinesFromImage() {
@@ -224,7 +251,8 @@ public class TesseractOcrWordAnalyser {
 		int height = box.h();
 
 		// line number starts from 1
-		RawOcrLine lineTextBox = new RawOcrLine(lineNumber + 1, x1, y1, x1 + width, y1 + height, confidence, ocrLineText);
+		RawOcrLine lineTextBox = new RawOcrLine(lineNumber + 1, x1, y1, x1 + width, y1 + height,
+			confidence, ocrLineText);
 		LOGGER.debug("lineTextBox: {}", lineTextBox);
 		return lineTextBox;
 	    }).collect(Collectors.toList());

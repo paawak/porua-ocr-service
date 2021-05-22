@@ -4,12 +4,13 @@
 	xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd"
-	logicalFilePath="V2__hard-coded-books.xml">
-	<changeSet author="Palash Ray" id="2">
-		<insert tableName="book">
-			<column name="id" value="1" />
-			<column name="name" value="Rajshekhar Basu Mahabharat" />
-			<column name="language" value="ben" />
-		</insert>
+	logicalFilePath="V5__ocr_word_new_col_id.xml">
+	<changeSet author="Palash Ray" id="5">
+		<addColumn tableName="ocr_word">
+			<column autoIncrement="true" name="id" type="INT">
+				<constraints primaryKey="true"
+					primaryKeyName="SYS_PK_30109" />
+			</column>			
+		</addColumn>
 	</changeSet>
 </databaseChangeLog>

@@ -2,6 +2,12 @@ server:
   port: 8080
   servlet:
     contextPath: /
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
   
 logging:
   level:
@@ -10,6 +16,7 @@ logging:
     org.springframework.web: INFO
     org.springframework.web.client.RestTemplate: DEBUG
     org.springframework.security.web.FilterChainProxy: WARN
+    org.springframework.data.repository: DEBUG
 
 spring:
   servlet:
@@ -31,3 +38,4 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:/sql/liquibase/master-change-log.xml
+

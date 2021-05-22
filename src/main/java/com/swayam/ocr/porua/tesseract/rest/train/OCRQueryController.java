@@ -17,6 +17,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,8 +29,12 @@ import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.OcrWord;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
+import com.swayam.ocr.porua.tesseract.model.UserDetails;
+import com.swayam.ocr.porua.tesseract.rest.train.dto.OcrWordOutputDto;
+import com.swayam.ocr.porua.tesseract.service.BookService;
 import com.swayam.ocr.porua.tesseract.service.FileSystemUtil;
-import com.swayam.ocr.porua.tesseract.service.OcrDataStoreService;
+import com.swayam.ocr.porua.tesseract.service.OcrWordService;
+import com.swayam.ocr.porua.tesseract.service.PageService;
 import com.swayam.ocr.porua.tesseract.service.TesseractOcrWordAnalyser;
 
 @RestController
@@ -37,39 +43,45 @@ public class OCRQueryController {
 
     private static final Logger LOG = LoggerFactory.getLogger(OCRQueryController.class);
 
-    private final OcrDataStoreService ocrDataStoreService;
+    private final BookService bookService;
+    private final PageService pageService;
+    private final OcrWordService ocrDataStoreService;
     private final FileSystemUtil fileSystemUtil;
 
-    public OCRQueryController(OcrDataStoreService ocrDataStoreService, FileSystemUtil fileSystemUtil) {
+    public OCRQueryController(BookService bookService, PageService pageService, OcrWordService ocrDataStoreService, FileSystemUtil fileSystemUtil) {
+	this.bookService = bookService;
+	this.pageService = pageService;
 	this.ocrDataStoreService = ocrDataStoreService;
 	this.fileSystemUtil = fileSystemUtil;
     }
 
     @GetMapping(value = "/book", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Book> getBooks() {
-	return ocrDataStoreService.getBooks();
+	return bookService.getBooks();
     }
 
     @GetMapping(value = "/book/{bookId}/page-count", produces = MediaType.APPLICATION_JSON_VALUE)
     public Integer getPagesInBook(@PathVariable("bookId") final long bookId) {
-	return ocrDataStoreService.getPageCount(bookId);
+	return pageService.getPageCount(bookId);
     }
 
     @GetMapping(value = "/page", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<PageImage> getPages(@RequestParam("bookId") final long bookId) {
-	return ocrDataStoreService.getPages(bookId);
+	return pageService.getPages(bookId);
     }
 
     @GetMapping(value = "/word", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Collection<OcrWord> getOcrWords(@RequestParam("bookId") final long bookId, @RequestParam("pageImageId") final long pageImageId) {
+    public Collection<OcrWordOutputDto> getOcrWords(@AuthenticationPrincipal Authentication authentication, @RequestParam("bookId") final long bookId,
+	    @RequestParam("pageImageId") final long pageImageId) {
+	UserDetails userDetails = (UserDetails) authentication.getDetails();
 	LOG.info("Retrieving OCR Words for Book Id {} and PageId {}", bookId, pageImageId);
-	return ocrDataStoreService.getWords(bookId, pageImageId);
+	return ocrDataStoreService.getWords(bookId, pageImageId, userDetails);
     }
 
     @GetMapping(value = "/word/image")
     public ResponseEntity<byte[]> getOcrWordImage(@RequestParam("bookId") final long bookId, @RequestParam("pageImageId") final long pageImageId, @RequestParam("wordSequenceId") int wordSequenceId)
 	    throws IOException {
-	String pageImageName = ocrDataStoreService.getPageImage(pageImageId).getName();
+	String pageImageName = pageService.getPageImage(pageImageId).getName();
 	Path imagePath = fileSystemUtil.getImageSaveLocation(pageImageName);
 
 	OcrWord ocrText = ocrDataStoreService.getWord(new OcrWordId(bookId, pageImageId, wordSequenceId));

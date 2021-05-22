@@ -4,12 +4,11 @@
 	xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd"
-	logicalFilePath="V2__hard-coded-books.xml">
-	<changeSet author="Palash Ray" id="2">
-		<insert tableName="book">
-			<column name="id" value="1" />
-			<column name="name" value="Rajshekhar Basu Mahabharat" />
-			<column name="language" value="ben" />
-		</insert>
+	logicalFilePath="V6__remove_correction_details_ocr_word.xml">
+	<changeSet author="Palash Ray" id="6">
+		<dropColumn tableName="ocr_word">
+			<column name="corrected_text" />
+			<column name="ignored" />
+		</dropColumn>
 	</changeSet>
 </databaseChangeLog>
