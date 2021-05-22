@@ -40,19 +40,21 @@ class OcrWordServiceImplIntegrationTest {
     @BeforeEach
     void setupBookAndRawImage() {
 	jdbcTemplate.execute("DROP TABLE IF EXISTS dummy_author_dummy_book_ocr_word");
+	jdbcTemplate.execute("DROP TABLE IF EXISTS dummy_author_dummy_book_corrected_word");
+	jdbcTemplate.execute("TRUNCATE TABLE page_image");
+	jdbcTemplate.execute("TRUNCATE TABLE book");
+
 	jdbcTemplate.execute("CREATE TABLE dummy_author_dummy_book_ocr_word (\n" + "  book_id int NOT NULL,\n"
 		+ "  page_image_id int NOT NULL,\n" + "  word_sequence_id int NOT NULL,\n"
 		+ "  raw_text varchar(255) NOT NULL,\n" + "  x1 int NOT NULL,\n" + "  y1 int NOT NULL,\n"
 		+ "  x2 int NOT NULL,\n" + "  y2 int NOT NULL,\n" + "  confidence double NOT NULL,\n"
 		+ "  line_number int,\n" + "  id INTEGER IDENTITY PRIMARY KEY\n" + ")");
 
-	jdbcTemplate.execute("DROP TABLE IF EXISTS dummy_author_dummy_book_corrected_word");
 	jdbcTemplate.execute("CREATE TABLE dummy_author_dummy_book_corrected_word (\n"
 		+ "  id INTEGER IDENTITY PRIMARY KEY,\n" + "  user_id int NOT NULL,\n"
 		+ "  ocr_word_id int NOT NULL,\n" + "  corrected_text varchar(255),\n"
 		+ "  ignored boolean NOT NULL \n" + ") ");
 
-	jdbcTemplate.execute("TRUNCATE TABLE book");
 	jdbcTemplate.update(
 		"INSERT INTO book (id, name, language, base_table_name) VALUES (1, 'TEST BOOK 1', 'ben', 'dummy_author_dummy_book')");
 	jdbcTemplate.update(
