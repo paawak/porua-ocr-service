@@ -167,10 +167,15 @@ class OcrWordServiceImplIntegrationTest {
 
 	OcrWordOutputDto outputDto1 = new OcrWordOutputDto();
 	BeanUtils.copyProperties(ocrWord1, outputDto1);
+	outputDto1.setId(0);
+	OcrWordOutputDto outputDto2 = new OcrWordOutputDto();
+	BeanUtils.copyProperties(ocrWord2, outputDto2);
+	outputDto2.setId(1);
 	OcrWordOutputDto outputDto3 = new OcrWordOutputDto();
 	BeanUtils.copyProperties(ocrWord3, outputDto3);
+	outputDto3.setId(2);
 
-	List<OcrWordOutputDto> expected = Arrays.asList(outputDto1, outputDto3);
+	List<OcrWordOutputDto> expected = Arrays.asList(outputDto1, outputDto2, outputDto3);
 
 	toBeInserted.forEach(ocrWord -> testClass.addOcrWord(ocrWord));
 
@@ -178,6 +183,7 @@ class OcrWordServiceImplIntegrationTest {
 	Collection<OcrWordOutputDto> results = testClass.getWords(1, 1, new UserDetails());
 
 	// then
+	assertEquals(3, results.size());
 	assertEquals(expected, results);
     }
 
@@ -209,7 +215,7 @@ class OcrWordServiceImplIntegrationTest {
 	int result = testClass.getWordCount(1, 1);
 
 	// then
-	assertEquals(2, result);
+	assertEquals(3, result);
     }
 
     private RowMapper<DummyAuthorDummyBookOcrWordEntity> ocrWordMapper() {
