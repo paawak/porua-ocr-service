@@ -3,14 +3,24 @@ package com.swayam.ocr.porua.tesseract.config;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -29,6 +39,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.annotations.VisibleForTesting;
 import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
@@ -41,6 +52,7 @@ import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeDescription.Generic;
+import net.bytebuddy.dynamic.DynamicType.Loaded;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.matcher.ElementMatchers;
@@ -64,6 +76,19 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	} catch (SQLException | IOException e) {
 	    throw new RuntimeException(e);
 	}
+    }
+
+    @VisibleForTesting
+    Optional<URI> getJarFilePath(URL url) {
+	if (url.getProtocol().equals("file")) {
+	    return Optional.empty();
+	}
+
+	if (!url.getProtocol().equals("jar")) {
+	    throw new IllegalArgumentException("Unsupported protocol: " + url.getProtocol());
+	}
+
+	return Optional.of(URI.create(url.toString().split(".jar!")[0] + ".jar"));
     }
 
     private void createEntitiesAndRepos(String dbUrl, String dbUser, String dbPassword)
@@ -125,12 +150,13 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
 	System.out.println("Creating new class: " + entityClassName);
 
-	new ByteBuddy().subclass(CorrectedWordEntityTemplate.class)
+	Loaded<?> generatedClass = new ByteBuddy().subclass(CorrectedWordEntityTemplate.class)
 		.annotateType(getEntityAnnotation(),
 			getTableAnnotation(baseTableName + CORRECTED_WORD_TABLE_SUFFIX))
 		.name(entityClassName).make()
-		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
-		.saveIn(getBaseLocation());
+		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER);
+
+	saveGeneratedClassAsFile(generatedClass);
 
     }
 
@@ -151,7 +177,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
 	Class<?> correctedEntityClass = Class.forName(correctedWordEntity);
 
-	new ByteBuddy().subclass(OcrWordEntityTemplate.class)
+	Loaded<?> generatedClass = new ByteBuddy().subclass(OcrWordEntityTemplate.class)
 		.annotateType(getEntityAnnotation(),
 			getTableAnnotation(baseTableName + OCR_WORD_TABLE_SUFFIX))
 		.defineField("correctedWords",
@@ -166,8 +192,9 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 				.build(),
 			Modifier.PUBLIC)
 		.intercept(FieldAccessor.ofBeanProperty()).name(entityClassName).make()
-		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
-		.saveIn(getBaseLocation());
+		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER);
+
+	saveGeneratedClassAsFile(generatedClass);
 
     }
 
@@ -192,10 +219,13 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	}
 	Generic crudRepo = Generic.Builder
 		.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
-	new ByteBuddy().makeInterface(crudRepo).implement(OcrWordRepositoryTemplate.class)
-		.annotateType(getRepositoryAnnotation(repositoryClassName)).name(repositoryClassName).make()
-		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
-		.saveIn(getBaseLocation());
+
+	Loaded<?> generatedClass =
+		new ByteBuddy().makeInterface(crudRepo).implement(OcrWordRepositoryTemplate.class)
+			.annotateType(getRepositoryAnnotation(repositoryClassName)).name(repositoryClassName)
+			.make().load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER);
+
+	saveGeneratedClassAsFile(generatedClass);
 
     }
 
@@ -212,7 +242,9 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	}
 	Generic crudRepo = Generic.Builder
 		.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
-	new ByteBuddy().makeInterface(crudRepo).implement(CorrectedWordRepositoryTemplate.class)
+
+	Loaded<?> generatedClass = new ByteBuddy().makeInterface(crudRepo)
+		.implement(CorrectedWordRepositoryTemplate.class)
 		.annotateType(getRepositoryAnnotation(repositoryClassName))
 		.method(ElementMatchers.named("updateCorrectedText")).withoutCode()
 		.annotateMethod(AnnotationDescription.Builder.ofType(Modifying.class).build())
@@ -228,8 +260,9 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 					+ " set ignored = TRUE where ocrWordId = :ocrWordId and user = :user")
 			.build())
 		.name(repositoryClassName).make()
-		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
-		.saveIn(getBaseLocation());
+		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER);
+
+	saveGeneratedClassAsFile(generatedClass);
 
     }
 
@@ -247,15 +280,43 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	}
     }
 
-    private File getBaseLocation() {
-	File baseLocation;
-	try {
-	    baseLocation = new File(DynamicJpaRepositoryPostProcessor.class.getProtectionDomain()
-		    .getCodeSource().getLocation().toURI());
-	} catch (URISyntaxException e) {
-	    throw new RuntimeException(e);
+    private void saveGeneratedClassAsFile(Loaded<?> generatedClass) throws IOException {
+	URL currentClassLocation =
+		DynamicJpaRepositoryPostProcessor.class.getProtectionDomain().getCodeSource().getLocation();
+	Optional<URI> jarFilePath = getJarFilePath(currentClassLocation);
+
+	if (jarFilePath.isEmpty()) {
+	    File baseLocation;
+	    try {
+		baseLocation = new File(currentClassLocation.toURI());
+	    } catch (URISyntaxException e) {
+		throw new RuntimeException(e);
+	    }
+	    generatedClass.saveIn(baseLocation);
+	} else {
+	    String baseDirectory = System.getProperty("user.dir");
+	    Map<TypeDescription, File> savedClass = generatedClass.saveIn(new File(baseDirectory));
+
+	    Map<String, String> env = new HashMap<>();
+	    env.put("create", "true");
+
+	    try (FileSystem zipfs = FileSystems.newFileSystem(jarFilePath.get(), env)) {
+		savedClass.entrySet().forEach(entry -> {
+		    Path pathToClassFile = entry.getValue().toPath();
+		    String relativePathOfClassFileInJar = "/BOOT-INF/classes"
+			    + entry.getValue().getAbsolutePath().substring(baseDirectory.length());
+
+		    Path pathInZipfile = zipfs.getPath(relativePathOfClassFileInJar);
+		    try {
+			Files.copy(pathToClassFile, pathInZipfile, StandardCopyOption.REPLACE_EXISTING);
+		    } catch (IOException e) {
+			throw new RuntimeException(e);
+		    }
+		});
+	    }
+
 	}
-	return baseLocation;
+
     }
 
 }
