@@ -239,9 +239,12 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     }
 
     private boolean classFileExists(String className) {
-	File baseLocation = getBaseLocation();
-	File pathToClassFile = new File(baseLocation, className.replaceAll("\\.", "/") + ".class");
-	return pathToClassFile.exists();
+	try {
+	    Class.forName(className);
+	    return true;
+	} catch (ClassNotFoundException e) {
+	    return false;
+	}
     }
 
     private File getBaseLocation() {
