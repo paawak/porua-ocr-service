@@ -4,7 +4,7 @@ Exposes Tesseract OCR (https://github.com/tesseract-ocr/tesseract/) calls over h
 
 This image is built on top of Alpine 3.7 and has the *paawak/tesseract-ocr-barebones*(https://hub.docker.com/r/paawak/tesseract-ocr-barebones/) as its base image. Every attempt has been made to keep its size to a minimum. 
 
-This application is written in Java/Spring Boot. JavaCPP-Presets(https://github.com/bytedeco/javacpp-presets) is used to talk to the C++ API of Tesseract from Java. Then, Spring Boot uses REST semantices to further expose these calls over HTTP. 
+This application is written in Java/Spring Boot. JavaCPP-Presets(https://github.com/bytedeco/javacpp-presets) is used to talk to the C++ API of Tesseract from Java. Then, Spring Boot uses REST semantics to further expose these calls over HTTP. 
 
 # How build docker image
 
@@ -18,7 +18,7 @@ mvn clean install -P docker
 
 ## Running in Local
 
-    java -Dspring.profiles.active=local -jar target/tesseract-ocr-rest.jar
+    java -Dspring.profiles.active=local -jar target/porua-ocr-service.jar
 
 ## Running in Docker
 
@@ -26,7 +26,7 @@ mvn clean install -P docker
     -v /kaaj/installs/tesseract/tessdata_best-4.0.0:/tesseract/tessdata    \
     -v /kaaj/source/porua/tesseract-ocr-rest/images:/tesseract-temp-images   \
     -e spring.profiles.active=container     \
-    paawak/tesseract-ocr-rest:latest
+    paawak/porua-ocr-service:latest
     
 # Google Authentication
 
