@@ -40,7 +40,6 @@ import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.VisibleForTesting;
-import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
@@ -60,8 +59,6 @@ import net.bytebuddy.matcher.ElementMatchers;
 
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcessor {
-
-    public static final String ENTITY_PACKAGE = Book.class.getPackageName();
 
     private static final String OCR_WORD_TABLE_SUFFIX = "_ocr_word";
 
