@@ -294,7 +294,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	    }
 	    generatedClass.saveIn(baseLocation);
 	} else {
-	    String baseDirectory = System.getProperty("user.dir");
+	    String baseDirectory = System.getProperty("java.io.tmpdir");
 	    Map<TypeDescription, File> savedClass = generatedClass.saveIn(new File(baseDirectory));
 
 	    Map<String, String> env = new HashMap<>();
