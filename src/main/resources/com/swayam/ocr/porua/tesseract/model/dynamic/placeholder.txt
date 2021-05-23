@@ -1,0 +1,1 @@
+This is a placeholder for dynamically generated classes in Jar.
