@@ -24,7 +24,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>11</java.version>
 		<liquibase.maven.version>3.6.3</liquibase.maven.version>
-		<swagger.version>2.7.0</swagger.version>
+		<swagger.version>3.0.0</swagger.version>
 	</properties>
 
 	<build>
