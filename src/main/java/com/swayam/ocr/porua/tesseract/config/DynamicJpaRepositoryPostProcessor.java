@@ -40,7 +40,6 @@ import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.VisibleForTesting;
-import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
@@ -53,14 +52,13 @@ import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeDescription.Generic;
 import net.bytebuddy.dynamic.DynamicType.Loaded;
+import net.bytebuddy.dynamic.DynamicType.Unloaded;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.matcher.ElementMatchers;
 
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcessor {
-
-    public static final String ENTITY_PACKAGE = Book.class.getPackageName();
 
     private static final String OCR_WORD_TABLE_SUFFIX = "_ocr_word";
 
@@ -150,11 +148,10 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
 	System.out.println("Creating new class: " + entityClassName);
 
-	Loaded<?> generatedClass = new ByteBuddy().subclass(CorrectedWordEntityTemplate.class)
+	Unloaded<?> generatedClass = new ByteBuddy().subclass(CorrectedWordEntityTemplate.class)
 		.annotateType(getEntityAnnotation(),
 			getTableAnnotation(baseTableName + CORRECTED_WORD_TABLE_SUFFIX))
-		.name(entityClassName).make()
-		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER);
+		.name(entityClassName).make();
 
 	saveGeneratedClassAsFile(generatedClass);
 
@@ -177,7 +174,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
 	Class<?> correctedEntityClass = Class.forName(correctedWordEntity);
 
-	Loaded<?> generatedClass = new ByteBuddy().subclass(OcrWordEntityTemplate.class)
+	Unloaded<?> generatedClass = new ByteBuddy().subclass(OcrWordEntityTemplate.class)
 		.annotateType(getEntityAnnotation(),
 			getTableAnnotation(baseTableName + OCR_WORD_TABLE_SUFFIX))
 		.defineField("correctedWords",
@@ -191,8 +188,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 			TypeDescription.Generic.Builder.parameterizedType(List.class, correctedEntityClass)
 				.build(),
 			Modifier.PUBLIC)
-		.intercept(FieldAccessor.ofBeanProperty()).name(entityClassName).make()
-		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER);
+		.intercept(FieldAccessor.ofBeanProperty()).name(entityClassName).make();
 
 	saveGeneratedClassAsFile(generatedClass);
 
@@ -220,10 +216,9 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	Generic crudRepo = Generic.Builder
 		.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
 
-	Loaded<?> generatedClass =
-		new ByteBuddy().makeInterface(crudRepo).implement(OcrWordRepositoryTemplate.class)
-			.annotateType(getRepositoryAnnotation(repositoryClassName)).name(repositoryClassName)
-			.make().load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER);
+	Unloaded<?> generatedClass = new ByteBuddy().makeInterface(crudRepo)
+		.implement(OcrWordRepositoryTemplate.class)
+		.annotateType(getRepositoryAnnotation(repositoryClassName)).name(repositoryClassName).make();
 
 	saveGeneratedClassAsFile(generatedClass);
 
@@ -243,7 +238,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	Generic crudRepo = Generic.Builder
 		.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
 
-	Loaded<?> generatedClass = new ByteBuddy().makeInterface(crudRepo)
+	Unloaded<?> generatedClass = new ByteBuddy().makeInterface(crudRepo)
 		.implement(CorrectedWordRepositoryTemplate.class)
 		.annotateType(getRepositoryAnnotation(repositoryClassName))
 		.method(ElementMatchers.named("updateCorrectedText")).withoutCode()
@@ -259,8 +254,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 				"update " + entityClassName
 					+ " set ignored = TRUE where ocrWordId = :ocrWordId and user = :user")
 			.build())
-		.name(repositoryClassName).make()
-		.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.WRAPPER);
+		.name(repositoryClassName).make();
 
 	saveGeneratedClassAsFile(generatedClass);
 
@@ -280,7 +274,11 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	}
     }
 
-    private void saveGeneratedClassAsFile(Loaded<?> generatedClass) throws IOException {
+    private void saveGeneratedClassAsFile(Unloaded<?> unloadedClass) throws IOException {
+
+	Loaded<?> loadedClass =
+		unloadedClass.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION);
+
 	URL currentClassLocation =
 		DynamicJpaRepositoryPostProcessor.class.getProtectionDomain().getCodeSource().getLocation();
 	Optional<URI> jarFilePath = getJarFilePath(currentClassLocation);
@@ -292,10 +290,10 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	    } catch (URISyntaxException e) {
 		throw new RuntimeException(e);
 	    }
-	    generatedClass.saveIn(baseLocation);
+	    loadedClass.saveIn(baseLocation);
 	} else {
 	    String baseDirectory = System.getProperty("java.io.tmpdir");
-	    Map<TypeDescription, File> savedClass = generatedClass.saveIn(new File(baseDirectory));
+	    Map<TypeDescription, File> savedClass = loadedClass.saveIn(new File(baseDirectory));
 
 	    Map<String, String> env = new HashMap<>();
 	    env.put("create", "true");
