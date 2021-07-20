@@ -4,22 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.persistence.Entity;
@@ -68,9 +60,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
 	System.out.println("Start creating dynamic JPA Repos...");
 	try {
-	    createEntitiesAndRepos(environment.getProperty("spring.datasource.url"),
-		    environment.getProperty("spring.datasource.username"),
-		    environment.getProperty("spring.datasource.password"));
+	    createEntitiesAndRepos(environment.getProperty("spring.datasource.url"), environment.getProperty("spring.datasource.username"), environment.getProperty("spring.datasource.password"));
 	} catch (SQLException | IOException e) {
 	    throw new RuntimeException(e);
 	}
@@ -89,8 +79,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	return Optional.of(URI.create(url.toString().split(".jar!")[0] + ".jar"));
     }
 
-    private void createEntitiesAndRepos(String dbUrl, String dbUser, String dbPassword)
-	    throws SQLException, IOException {
+    private void createEntitiesAndRepos(String dbUrl, String dbUser, String dbPassword) throws SQLException, IOException {
 	Connection con = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
 	PreparedStatement pStat;
 	try {
@@ -107,25 +96,21 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 		System.err.println("Dynamic JPA Repo cannot be created as the *base_table_name* is empty");
 		continue;
 	    }
-	    EntityClassDetails entityClassDetails =
-		    new EntityClassUtil().getEntityClassDetails(baseTableName);
+	    EntityClassDetails entityClassDetails = new EntityClassUtil().getEntityClassDetails(baseTableName);
 	    createCorrectedWordEntity(baseTableName, entityClassDetails.getCorrectedWordEntity());
 	    try {
-		createOcrWordEntity(baseTableName, entityClassDetails.getOcrWordEntity(),
-			entityClassDetails.getCorrectedWordEntity());
+		createOcrWordEntity(baseTableName, entityClassDetails.getOcrWordEntity(), entityClassDetails.getCorrectedWordEntity());
 	    } catch (ClassNotFoundException | IOException e) {
 		throw new RuntimeException(e);
 	    }
 	    try {
-		createOcrWordRepository(entityClassDetails.getOcrWordEntityRepository(),
-			entityClassDetails.getOcrWordEntity());
+		createOcrWordRepository(entityClassDetails.getOcrWordEntityRepository(), entityClassDetails.getOcrWordEntity());
 	    } catch (ClassNotFoundException | IOException e) {
 		throw new RuntimeException(e);
 	    }
 
 	    try {
-		createCorrectedWordRepository(entityClassDetails.getCorrectedWordEntityRepository(),
-			entityClassDetails.getCorrectedWordEntity());
+		createCorrectedWordRepository(entityClassDetails.getCorrectedWordEntityRepository(), entityClassDetails.getCorrectedWordEntity());
 	    } catch (ClassNotFoundException | IOException e) {
 		throw new RuntimeException(e);
 	    }
@@ -148,9 +133,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
 	System.out.println("Creating new class: " + entityClassName);
 
-	Unloaded<?> generatedClass = new ByteBuddy().subclass(CorrectedWordEntityTemplate.class)
-		.annotateType(getEntityAnnotation(),
-			getTableAnnotation(baseTableName + CORRECTED_WORD_TABLE_SUFFIX))
+	Unloaded<?> generatedClass = new ByteBuddy().subclass(CorrectedWordEntityTemplate.class).annotateType(getEntityAnnotation(), getTableAnnotation(baseTableName + CORRECTED_WORD_TABLE_SUFFIX))
 		.name(entityClassName).make();
 
 	saveGeneratedClassAsFile(generatedClass);
@@ -162,8 +145,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
      * generated class looks like {@link DummyAuthorDummyBookOcrWordEntity} in
      * the <em>test</em> folder.
      */
-    private void createOcrWordEntity(String baseTableName, String entityClassName, String correctedWordEntity)
-	    throws IOException, ClassNotFoundException {
+    private void createOcrWordEntity(String baseTableName, String entityClassName, String correctedWordEntity) throws IOException, ClassNotFoundException {
 
 	if (classFileExists(entityClassName)) {
 	    System.out.println("The class " + entityClassName + " already exists, not creating a new one");
@@ -174,20 +156,11 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
 	Class<?> correctedEntityClass = Class.forName(correctedWordEntity);
 
-	Unloaded<?> generatedClass = new ByteBuddy().subclass(OcrWordEntityTemplate.class)
-		.annotateType(getEntityAnnotation(),
-			getTableAnnotation(baseTableName + OCR_WORD_TABLE_SUFFIX))
-		.defineField("correctedWords",
-			TypeDescription.Generic.Builder.parameterizedType(List.class, correctedEntityClass)
-				.build(),
-			Modifier.PRIVATE)
-		.annotateField(AnnotationDescription.Builder.ofType(OneToMany.class)
-			.define("fetch", FetchType.LAZY).define("mappedBy", "ocrWordId").build())
+	Unloaded<?> generatedClass = new ByteBuddy().subclass(OcrWordEntityTemplate.class).annotateType(getEntityAnnotation(), getTableAnnotation(baseTableName + OCR_WORD_TABLE_SUFFIX))
+		.defineField("correctedWords", TypeDescription.Generic.Builder.parameterizedType(List.class, correctedEntityClass).build(), Modifier.PRIVATE)
+		.annotateField(AnnotationDescription.Builder.ofType(OneToMany.class).define("fetch", FetchType.LAZY).define("mappedBy", "ocrWordId").build())
 		.annotateField(AnnotationDescription.Builder.ofType(JsonIgnore.class).build())
-		.defineMethod("getCorrectedWords",
-			TypeDescription.Generic.Builder.parameterizedType(List.class, correctedEntityClass)
-				.build(),
-			Modifier.PUBLIC)
+		.defineMethod("getCorrectedWords", TypeDescription.Generic.Builder.parameterizedType(List.class, correctedEntityClass).build(), Modifier.PUBLIC)
 		.intercept(FieldAccessor.ofBeanProperty()).name(entityClassName).make();
 
 	saveGeneratedClassAsFile(generatedClass);
@@ -208,17 +181,14 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
      * {@link DummyAuthorDummyBookOcrWordRepository} in the <em>test</em>
      * folder.
      */
-    private void createOcrWordRepository(String repositoryClassName, String entityClassName)
-	    throws IOException, ClassNotFoundException {
+    private void createOcrWordRepository(String repositoryClassName, String entityClassName) throws IOException, ClassNotFoundException {
 	if (classFileExists(repositoryClassName)) {
 	    return;
 	}
-	Generic crudRepo = Generic.Builder
-		.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
+	Generic crudRepo = Generic.Builder.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
 
-	Unloaded<?> generatedClass = new ByteBuddy().makeInterface(crudRepo)
-		.implement(OcrWordRepositoryTemplate.class)
-		.annotateType(getRepositoryAnnotation(repositoryClassName)).name(repositoryClassName).make();
+	Unloaded<?> generatedClass =
+		new ByteBuddy().makeInterface(crudRepo).implement(OcrWordRepositoryTemplate.class).annotateType(getRepositoryAnnotation(repositoryClassName)).name(repositoryClassName).make();
 
 	saveGeneratedClassAsFile(generatedClass);
 
@@ -230,30 +200,19 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
      * {@link DummyAuthorDummyBookCorrectedWordRepository} in the <em>test</em>
      * folder.
      */
-    private void createCorrectedWordRepository(String repositoryClassName, String entityClassName)
-	    throws IOException, ClassNotFoundException {
+    private void createCorrectedWordRepository(String repositoryClassName, String entityClassName) throws IOException, ClassNotFoundException {
 	if (classFileExists(repositoryClassName)) {
 	    return;
 	}
-	Generic crudRepo = Generic.Builder
-		.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
+	Generic crudRepo = Generic.Builder.parameterizedType(CrudRepository.class, Class.forName(entityClassName), Long.class).build();
 
-	Unloaded<?> generatedClass = new ByteBuddy().makeInterface(crudRepo)
-		.implement(CorrectedWordRepositoryTemplate.class)
-		.annotateType(getRepositoryAnnotation(repositoryClassName))
-		.method(ElementMatchers.named("updateCorrectedText")).withoutCode()
-		.annotateMethod(AnnotationDescription.Builder.ofType(Modifying.class).build())
-		.annotateMethod(AnnotationDescription.Builder.ofType(Query.class).define("value", "update "
-			+ entityClassName
-			+ " set correctedText = :correctedText where ocrWordId = :ocrWordId and user = :user")
-			.build())
-		.method(ElementMatchers.named("markAsIgnored")).withoutCode()
-		.annotateMethod(AnnotationDescription.Builder.ofType(Modifying.class).build())
+	Unloaded<?> generatedClass = new ByteBuddy().makeInterface(crudRepo).implement(CorrectedWordRepositoryTemplate.class).annotateType(getRepositoryAnnotation(repositoryClassName))
+		.method(ElementMatchers.named("updateCorrectedText")).withoutCode().annotateMethod(AnnotationDescription.Builder.ofType(Modifying.class).build())
 		.annotateMethod(AnnotationDescription.Builder.ofType(Query.class)
-			.define("value",
-				"update " + entityClassName
-					+ " set ignored = TRUE where ocrWordId = :ocrWordId and user = :user")
-			.build())
+			.define("value", "update " + entityClassName + " set correctedText = :correctedText where ocrWordId = :ocrWordId and user = :user").build())
+		.method(ElementMatchers.named("markAsIgnored")).withoutCode().annotateMethod(AnnotationDescription.Builder.ofType(Modifying.class).build())
+		.annotateMethod(
+			AnnotationDescription.Builder.ofType(Query.class).define("value", "update " + entityClassName + " set ignored = TRUE where ocrWordId = :ocrWordId and user = :user").build())
 		.name(repositoryClassName).make();
 
 	saveGeneratedClassAsFile(generatedClass);
@@ -261,8 +220,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     }
 
     private AnnotationDescription getRepositoryAnnotation(String repositoryClassName) {
-	return AnnotationDescription.Builder.ofType(Repository.class).define("value", repositoryClassName)
-		.build();
+	return AnnotationDescription.Builder.ofType(Repository.class).define("value", repositoryClassName).build();
     }
 
     private boolean classFileExists(String className) {
@@ -276,44 +234,11 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
     private void saveGeneratedClassAsFile(Unloaded<?> unloadedClass) throws IOException {
 
-	Loaded<?> loadedClass =
-		unloadedClass.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION);
+	Loaded<?> loadedClass = unloadedClass.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION);
 
-	URL currentClassLocation =
-		DynamicJpaRepositoryPostProcessor.class.getProtectionDomain().getCodeSource().getLocation();
-	Optional<URI> jarFilePath = getJarFilePath(currentClassLocation);
+	File baseLocation = new File("/dynamic-jpa-classes");
 
-	if (jarFilePath.isEmpty()) {
-	    File baseLocation;
-	    try {
-		baseLocation = new File(currentClassLocation.toURI());
-	    } catch (URISyntaxException e) {
-		throw new RuntimeException(e);
-	    }
-	    loadedClass.saveIn(baseLocation);
-	} else {
-	    String baseDirectory = System.getProperty("java.io.tmpdir");
-	    Map<TypeDescription, File> savedClass = loadedClass.saveIn(new File(baseDirectory));
-
-	    Map<String, String> env = new HashMap<>();
-	    env.put("create", "true");
-
-	    try (FileSystem zipfs = FileSystems.newFileSystem(jarFilePath.get(), env)) {
-		savedClass.entrySet().forEach(entry -> {
-		    Path pathToClassFile = entry.getValue().toPath();
-		    String relativePathOfClassFileInJar = "/BOOT-INF/classes"
-			    + entry.getValue().getAbsolutePath().substring(baseDirectory.length());
-
-		    Path pathInZipfile = zipfs.getPath(relativePathOfClassFileInJar);
-		    try {
-			Files.copy(pathToClassFile, pathInZipfile, StandardCopyOption.REPLACE_EXISTING);
-		    } catch (IOException e) {
-			throw new RuntimeException(e);
-		    }
-		});
-	    }
-
-	}
+	loadedClass.saveIn(baseLocation);
 
     }
 
