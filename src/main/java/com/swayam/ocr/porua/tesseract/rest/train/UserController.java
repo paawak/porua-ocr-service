@@ -20,7 +20,7 @@ public class UserController {
 	this.userService = userService;
     }
 
-    @GetMapping(value = "/register", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/registration", produces = MediaType.APPLICATION_JSON_VALUE)
     public UserDetails newRegister(@RequestHeader(name = AuthenticationTokenExtractor.AUTH_TOKEN_NAME, required = true) String authenticationToken) {
 	return userService.doNewRegistration(authenticationToken);
     }

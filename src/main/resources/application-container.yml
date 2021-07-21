@@ -1,11 +1,11 @@
 app:
   config:
-    server:
-      image-write-directory: /tesseract-temp-images  
-    ocr:
-      tesseract:
-        tessdata-location: /tesseract/tessdata/
+    image-write-directory: '/tesseract-temp-images'  
+    tessdata-location: '/tesseract/tessdata/'
+    dynamic-jpa-write-directory: '/dynamic-jpa-classes'
 
 spring:
   datasource:
-    url: jdbc:mysql://192.168.1.4:3306/porua?useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/porua?useSSL=false&allowPublicKeyRetrieval=true
+  liquibase:
+    enabled: false

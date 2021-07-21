@@ -12,9 +12,9 @@ import org.bytedeco.leptonica.PIX;
 import org.bytedeco.tesseract.TessBaseAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.swayam.ocr.porua.tesseract.config.ApplicationProperties;
 import com.swayam.ocr.porua.tesseract.model.Language;
 
 @Service
@@ -24,11 +24,10 @@ public class TesseractInvokerServiceImpl implements TesseractInvokerService {
 
     private static final String UTF_8 = "utf-8";
 
-    private final String tessdataDirectory;
+    private final ApplicationProperties applicationProperties;
 
-    public TesseractInvokerServiceImpl(@Value("${app.config.ocr.tesseract.tessdata-location}") String tessdataDirectory,
-	    @Value("${app.config.server.image-write-directory}") String imageWriteDirectory) {
-	this.tessdataDirectory = tessdataDirectory;
+    public TesseractInvokerServiceImpl(ApplicationProperties applicationProperties) {
+	this.applicationProperties = applicationProperties;
     }
 
     @Override
@@ -37,7 +36,7 @@ public class TesseractInvokerServiceImpl implements TesseractInvokerService {
 	LOGGER.info("saved image file at: {}", imagePath);
 
 	try (TessBaseAPI api = new TessBaseAPI();) {
-	    int returnCode = api.Init(tessdataDirectory, language.name());
+	    int returnCode = api.Init(applicationProperties.getTessdataLocation(), language.name());
 	    if (returnCode != 0) {
 		throw new RuntimeException("could not initialize tesseract, error code: " + returnCode);
 	    }

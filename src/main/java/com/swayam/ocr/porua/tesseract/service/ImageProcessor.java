@@ -18,10 +18,10 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
+import com.swayam.ocr.porua.tesseract.config.ApplicationProperties;
 import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.OcrWordId;
 import com.swayam.ocr.porua.tesseract.model.PageImage;
@@ -36,15 +36,14 @@ public class ImageProcessor {
     private final BookService bookService;
     private final PageService pageService;
     private final OcrWordService ocrDataStoreService;
-    private final String tessDataDirectory;
+    private final ApplicationProperties applicationProperties;
 
-    public ImageProcessor(TaskExecutor taskExecutor, BookService bookService, PageService pageService, OcrWordService ocrDataStoreService,
-	    @Value("${app.config.ocr.tesseract.tessdata-location}") String tessDataDirectory) {
+    public ImageProcessor(TaskExecutor taskExecutor, BookService bookService, PageService pageService, OcrWordService ocrDataStoreService, ApplicationProperties applicationProperties) {
 	this.taskExecutor = taskExecutor;
 	this.bookService = bookService;
 	this.pageService = pageService;
 	this.ocrDataStoreService = ocrDataStoreService;
-	this.tessDataDirectory = tessDataDirectory;
+	this.applicationProperties = applicationProperties;
     }
 
     public int processEBookInPdf(long bookId, final String fileName, final Path eBookPdfDownloadPath) {
@@ -98,8 +97,8 @@ public class ImageProcessor {
 	newPageImage.setBook(book);
 	long imageFileId = pageService.addPageImage(newPageImage).getId();
 
-	return new TesseractOcrWordAnalyser(savedImagePath, book.getLanguage(), tessDataDirectory).extractWordsFromImage((wordSequenceId) -> new OcrWordId(book.getId(), imageFileId, wordSequenceId))
-		.stream().map(rawText -> ocrDataStoreService.addOcrWord(rawText)).map(ocrWord -> {
+	return new TesseractOcrWordAnalyser(savedImagePath, book.getLanguage(), applicationProperties.getTessdataLocation())
+		.extractWordsFromImage((wordSequenceId) -> new OcrWordId(book.getId(), imageFileId, wordSequenceId)).stream().map(rawText -> ocrDataStoreService.addOcrWord(rawText)).map(ocrWord -> {
 		    OcrWordOutputDto dto = new OcrWordOutputDto();
 		    BeanUtils.copyProperties(ocrWord, dto);
 		    return dto;
