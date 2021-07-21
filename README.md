@@ -18,7 +18,7 @@ mvn clean install -P docker
 
 ## Running in Local
 
-    java -Dspring.profiles.active=local -jar target/porua-ocr-service.jar
+    java -Dspring.profiles.active=local -classpath ./target/classes:target/porua-ocr-service.jar org.springframework.boot.loader.JarLauncher
 
 ## Running in Docker
 
