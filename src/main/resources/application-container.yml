@@ -1,10 +1,8 @@
 app:
   config:
-    server:
-      image-write-directory: /tesseract-temp-images  
-    ocr:
-      tesseract:
-        tessdata-location: /tesseract/tessdata/
+    image-write-directory: '/tesseract-temp-images'  
+    tessdata-location: '/tesseract/tessdata/'
+    dynamic-jpa-write-directory: '/dynamic-jpa-classes'
 
 spring:
   datasource:

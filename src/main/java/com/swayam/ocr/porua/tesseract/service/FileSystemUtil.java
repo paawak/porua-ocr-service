@@ -5,22 +5,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.swayam.ocr.porua.tesseract.config.ApplicationProperties;
 
 @Service
 public class FileSystemUtil {
 
-    private final String imageWriteDirectory;
+    private final ApplicationProperties applicationProperties;
 
-    public FileSystemUtil(@Value("${app.config.server.image-write-directory}") String imageWriteDirectory) {
-	this.imageWriteDirectory = imageWriteDirectory;
+    public FileSystemUtil(ApplicationProperties applicationProperties) {
+	this.applicationProperties = applicationProperties;
 
     }
 
     public Path getImageSaveLocation(String imageFileName) {
-	return Paths.get(imageWriteDirectory, imageFileName);
+	return Paths.get(applicationProperties.getImageWriteDirectory()).resolve(imageFileName);
     }
 
     public Path saveMultipartFileAsImage(MultipartFile image) {

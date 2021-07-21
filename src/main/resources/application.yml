@@ -36,6 +36,6 @@ spring:
     hibernate:
       ddl-auto: none
   liquibase:
-    enabled: true
+    enabled: false
     change-log: classpath:/sql/liquibase/master-change-log.xml
 
