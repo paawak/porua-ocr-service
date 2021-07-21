@@ -21,7 +21,7 @@ public class FileSystemUtil {
     }
 
     public Path getImageSaveLocation(String imageFileName) {
-	return Paths.get(applicationProperties.getImageWriteDirectory()).resolve(imageFileName);
+	return Paths.get(applicationProperties.getImageWriteDirectory(), imageFileName);
     }
 
     public Path saveMultipartFileAsImage(MultipartFile image) {

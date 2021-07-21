@@ -1,5 +1,5 @@
 app:
   config:
-    image-write-directory: '/kaaj/source/porua/tesseract-ocr-rest/images'
+    image-write-directory: '/kaaj/source/porua/porua-ocr-service/images'
     tessdata-location: '/kaaj/installs/tesseract/tessdata_best-4.0.0'
     dynamic-jpa-write-directory: './target/classes'
