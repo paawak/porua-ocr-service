@@ -31,4 +31,3 @@ spring:
         dialect: org.hibernate.dialect.HSQLDialect
   liquibase:
     enabled: true
-    change-log: classpath:/sql/liquibase/master-change-log.xml
