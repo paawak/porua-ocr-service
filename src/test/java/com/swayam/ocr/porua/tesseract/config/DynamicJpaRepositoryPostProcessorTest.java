@@ -16,11 +16,11 @@ class DynamicJpaRepositoryPostProcessorTest {
     @Test
     void testGetJarFilePath_1() throws MalformedURLException {
 	// given
-	DynamicJpaRepositoryPostProcessor testClass = new DynamicJpaRepositoryPostProcessor();
+	DynamicJpaRepositoryPostProcessor testClass = null;// new
+							   // DynamicJpaRepositoryPostProcessor();
 
 	// when
-	Optional<URI> result = testClass.getJarFilePath(
-		new URL("jar:file:/usr/lib/ocr/target/porua-ocr-service.jar!/BOOT-INF/classes!/"));
+	Optional<URI> result = testClass.getJarFilePath(new URL("jar:file:/usr/lib/ocr/target/porua-ocr-service.jar!/BOOT-INF/classes!/"));
 
 	// then
 	assertEquals(URI.create("jar:file:/usr/lib/ocr/target/porua-ocr-service.jar"), result.get());
@@ -29,7 +29,8 @@ class DynamicJpaRepositoryPostProcessorTest {
     @Test
     void testGetJarFilePath_2() throws MalformedURLException {
 	// given
-	DynamicJpaRepositoryPostProcessor testClass = new DynamicJpaRepositoryPostProcessor();
+	DynamicJpaRepositoryPostProcessor testClass = null;// new
+							   // DynamicJpaRepositoryPostProcessor();
 
 	// when
 	Optional<URI> result = testClass.getJarFilePath(new URL("file:/usr/lib/ocr/target/classes"));
@@ -41,11 +42,11 @@ class DynamicJpaRepositoryPostProcessorTest {
     @Test
     void testGetJarFilePath_3() throws MalformedURLException {
 	// given
-	DynamicJpaRepositoryPostProcessor testClass = new DynamicJpaRepositoryPostProcessor();
+	DynamicJpaRepositoryPostProcessor testClass = null;// new
+							   // DynamicJpaRepositoryPostProcessor();
 
 	// when, then
-	assertThrows("Unsupported protocol: https", IllegalArgumentException.class,
-		() -> testClass.getJarFilePath(new URL("https://github.com/paawak/porua-ocr-service")));
+	assertThrows("Unsupported protocol: https", IllegalArgumentException.class, () -> testClass.getJarFilePath(new URL("https://github.com/paawak/porua-ocr-service")));
     }
 
 }

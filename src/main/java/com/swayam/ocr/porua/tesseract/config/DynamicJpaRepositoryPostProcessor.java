@@ -1,6 +1,5 @@
 package com.swayam.ocr.porua.tesseract.config;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.net.URI;
@@ -11,23 +10,23 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -49,19 +48,43 @@ import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.matcher.ElementMatchers;
 
-@Order(Ordered.LOWEST_PRECEDENCE)
-public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcessor {
+//@Configuration
+public class DynamicJpaRepositoryPostProcessor {
 
     private static final String OCR_WORD_TABLE_SUFFIX = "_ocr_word";
 
     private static final String CORRECTED_WORD_TABLE_SUFFIX = "_corrected_word";
 
-    @Override
-    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+    private final List<EntityClassDetails> entityDetails;
+
+    public DynamicJpaRepositoryPostProcessor(ConfigurableEnvironment environment) {
 	System.out.println("Start creating dynamic JPA Repos...");
 	try {
-	    createEntitiesAndRepos(environment);
+	    entityDetails = createEntitiesAndRepos(environment);
 	} catch (SQLException | IOException e) {
+	    throw new RuntimeException(e);
+	}
+    }
+
+    @Lazy
+    @Bean
+    public org.springframework.data.repository.Repository ocrWordRepo(EntityManager entityManager) {
+	try {
+	    JpaRepositoryFactoryBean jpaRepositoryFactoryBean = new JpaRepositoryFactoryBean(Class.forName(entityDetails.get(0).getOcrWordEntityRepository()));
+	    jpaRepositoryFactoryBean.setEntityManager(entityManager);
+	    return jpaRepositoryFactoryBean.getObject();
+	} catch (ClassNotFoundException e) {
+	    throw new RuntimeException(e);
+	}
+    }
+
+    @Lazy
+    @Bean
+    public org.springframework.data.repository.Repository correctedWordRepo(EntityManager entityManager) {
+	try {
+	    JpaRepositoryFactoryBean jpaRepositoryFactoryBean = new JpaRepositoryFactoryBean(Class.forName(entityDetails.get(0).getCorrectedWordEntityRepository()));
+	    return jpaRepositoryFactoryBean.getObject();
+	} catch (ClassNotFoundException e) {
 	    throw new RuntimeException(e);
 	}
     }
@@ -79,7 +102,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	return Optional.of(URI.create(url.toString().split(".jar!")[0] + ".jar"));
     }
 
-    private void createEntitiesAndRepos(ConfigurableEnvironment environment) throws SQLException, IOException {
+    private List<EntityClassDetails> createEntitiesAndRepos(ConfigurableEnvironment environment) throws SQLException, IOException {
 	String dbUrl = environment.getProperty("spring.datasource.url");
 	String dbUser = environment.getProperty("spring.datasource.username");
 	String dbPassword = environment.getProperty("spring.datasource.password");
@@ -88,11 +111,10 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 	try {
 	    pStat = con.prepareStatement("SELECT base_table_name FROM book");
 	} catch (SQLSyntaxErrorException e) {
-	    System.err.println("Could not create dynamic JPA Repos: " + e.getMessage());
-	    e.printStackTrace();
-	    return;
+	    throw new RuntimeException(e);
 	}
 	ResultSet res = pStat.executeQuery();
+	List<EntityClassDetails> entityDetails = new ArrayList<>();
 	while (res.next()) {
 	    String baseTableName = res.getString("base_table_name");
 	    if (!StringUtils.hasText(baseTableName)) {
@@ -118,13 +140,17 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 		throw new RuntimeException(e);
 	    }
 
+	    entityDetails.add(entityClassDetails);
+
 	}
+
+	return entityDetails;
     }
 
     /**
      * Creates an instance of {@link CorrectedWordEntityTemplate} dynamically.
      * The generated class looks like
-     * {@link DummyAuthorDummyBookCorrectedWordEntity} in the <em>test</em>
+     * {@link RajshekharBasuMahabharatBanglaCorrectedWordEntity} in the <em>test</em>
      * folder.
      */
     private void createCorrectedWordEntity(String baseTableName, String entityClassName, ConfigurableEnvironment environment) throws IOException {
@@ -145,7 +171,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
     /**
      * Creates an instance of {@link OcrWordEntityTemplate} dynamically. The
-     * generated class looks like {@link DummyAuthorDummyBookOcrWordEntity} in
+     * generated class looks like {@link RajshekharBasuMahabharatBanglaOcrWordEntity} in
      * the <em>test</em> folder.
      */
     private void createOcrWordEntity(String baseTableName, String entityClassName, String correctedWordEntity, ConfigurableEnvironment environment) throws IOException, ClassNotFoundException {
@@ -181,7 +207,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     /**
      * Creates a child interface of {@link OcrWordRepositoryTemplate}
      * dynamically. The generated class looks like
-     * {@link DummyAuthorDummyBookOcrWordRepository} in the <em>test</em>
+     * {@link RajshekharBasuMahabharatBanglaOcrWordRepository} in the <em>test</em>
      * folder.
      */
     private void createOcrWordRepository(String repositoryClassName, String entityClassName, ConfigurableEnvironment environment) throws IOException, ClassNotFoundException {
@@ -200,7 +226,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     /**
      * Creates a child interface of {@link CorrectedWordRepositoryTemplate}
      * dynamically. The generated class looks like
-     * {@link DummyAuthorDummyBookCorrectedWordRepository} in the <em>test</em>
+     * {@link RajshekharBasuMahabharatBanglaCorrectedWordRepository} in the <em>test</em>
      * folder.
      */
     private void createCorrectedWordRepository(String repositoryClassName, String entityClassName, ConfigurableEnvironment environment) throws IOException, ClassNotFoundException {
@@ -223,7 +249,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     }
 
     private AnnotationDescription getRepositoryAnnotation(String repositoryClassName) {
-	return AnnotationDescription.Builder.ofType(Repository.class).define("value", repositoryClassName).build();
+	return AnnotationDescription.Builder.ofType(org.springframework.stereotype.Repository.class).build();
     }
 
     private boolean classFileExists(String className) {
@@ -239,9 +265,10 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 
 	Loaded<?> loadedClass = unloadedClass.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION);
 
-	File baseLocation = new File(environment.getProperty("app.config.dynamic-jpa-write-directory"));
+	// File baseLocation = new
+	// File(environment.getProperty("app.config.dynamic-jpa-write-directory"));
 
-	loadedClass.saveIn(baseLocation);
+	loadedClass.getLoaded();
 
     }
 
