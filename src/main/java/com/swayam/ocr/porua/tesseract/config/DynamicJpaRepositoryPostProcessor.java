@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,8 +22,12 @@ import javax.persistence.Table;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -32,11 +37,8 @@ import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.VisibleForTesting;
-import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
-import com.swayam.ocr.porua.tesseract.model.PageImage;
-import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.model.dynamic.RajshekharBasuMahabharatBanglaCorrectedWordEntity;
 import com.swayam.ocr.porua.tesseract.model.dynamic.RajshekharBasuMahabharatBanglaOcrWordEntity;
 import com.swayam.ocr.porua.tesseract.repo.BookRepository;
@@ -59,8 +61,7 @@ import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.matcher.ElementMatchers;
 
-@Configuration
-public class DynamicJpaRepositoryPostProcessor {
+public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(DynamicJpaRepositoryPostProcessor.class);
 
@@ -72,34 +73,23 @@ public class DynamicJpaRepositoryPostProcessor {
 	LOG.info("Start creating dynamic JPA Repos...");
     }
 
-    @Bean
-    public JpaRepositoryFactoryBean<RajshekharBasuMahabharatBanglaOcrWordRepository, RajshekharBasuMahabharatBanglaOcrWordEntity, Long> ocrWordRepo() {
-	return new JpaRepositoryFactoryBean<>(RajshekharBasuMahabharatBanglaOcrWordRepository.class);
-    }
+    @Override
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+	List<Class<?>> jpaRepos = Arrays.asList(RajshekharBasuMahabharatBanglaOcrWordRepository.class, RajshekharBasuMahabharatBanglaCorrectedWordRepository.class, BookRepository.class,
+		PageImageRepository.class, UserDetailsRepository.class);
 
-    @Bean
-    public JpaRepositoryFactoryBean<RajshekharBasuMahabharatBanglaCorrectedWordRepository, RajshekharBasuMahabharatBanglaCorrectedWordEntity, Long>
-	    rajshekharBasuMahabharatBanglaCorrectedWordRepository() {
-	return new JpaRepositoryFactoryBean<>(RajshekharBasuMahabharatBanglaCorrectedWordRepository.class);
-    }
+	jpaRepos.forEach(jpaRepo -> {
+	    BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(JpaRepositoryFactoryBean.class).addConstructorArgValue(jpaRepo);
+	    ((DefaultListableBeanFactory) beanFactory).registerBeanDefinition(jpaRepo.getSimpleName(), beanDefinitionBuilder.getBeanDefinition());
+	});
 
-    @Bean
-    public JpaRepositoryFactoryBean<BookRepository, Book, Long> bookRepository() {
-	return new JpaRepositoryFactoryBean<>(BookRepository.class);
-    }
-
-    @Bean
-    public JpaRepositoryFactoryBean<PageImageRepository, PageImage, Long> pageImageRepository() {
-	return new JpaRepositoryFactoryBean<>(PageImageRepository.class);
-    }
-
-    @Bean
-    public JpaRepositoryFactoryBean<UserDetailsRepository, UserDetails, Long> userDetailsRepository() {
-	return new JpaRepositoryFactoryBean<>(UserDetailsRepository.class);
     }
 
     @VisibleForTesting
     Optional<URI> getJarFilePath(URL url) {
+
+	GenericBeanDefinition bd = new GenericBeanDefinition();
+
 	if (url.getProtocol().equals("file")) {
 	    return Optional.empty();
 	}
