@@ -1,5 +1,6 @@
 package com.swayam.ocr.porua.tesseract.config;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.net.URI;
@@ -27,7 +28,7 @@ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.beans.factory.support.GenericBeanDefinition;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -39,15 +40,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.VisibleForTesting;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
-import com.swayam.ocr.porua.tesseract.model.dynamic.RajshekharBasuMahabharatBanglaCorrectedWordEntity;
-import com.swayam.ocr.porua.tesseract.model.dynamic.RajshekharBasuMahabharatBanglaOcrWordEntity;
 import com.swayam.ocr.porua.tesseract.repo.BookRepository;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.repo.PageImageRepository;
 import com.swayam.ocr.porua.tesseract.repo.UserDetailsRepository;
-import com.swayam.ocr.porua.tesseract.repo.dynamic.RajshekharBasuMahabharatBanglaCorrectedWordRepository;
-import com.swayam.ocr.porua.tesseract.repo.dynamic.RajshekharBasuMahabharatBanglaOcrWordRepository;
 import com.swayam.ocr.porua.tesseract.service.EntityClassUtil;
 import com.swayam.ocr.porua.tesseract.service.EntityClassUtil.EntityClassDetails;
 
@@ -61,6 +58,7 @@ import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.matcher.ElementMatchers;
 
+@Configuration
 public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(DynamicJpaRepositoryPostProcessor.class);
@@ -69,26 +67,50 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
 
     private static final String CORRECTED_WORD_TABLE_SUFFIX = "_corrected_word";
 
-    public DynamicJpaRepositoryPostProcessor(ConfigurableEnvironment environment) {
-	LOG.info("Start creating dynamic JPA Repos...");
-    }
+    // public DynamicJpaRepositoryPostProcessor(ConfigurableEnvironment
+    // environment) {
+    // this.environment = environment;
+    // LOG.info("Start creating dynamic JPA Repos...");
+    // }
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-	List<Class<?>> jpaRepos = Arrays.asList(RajshekharBasuMahabharatBanglaOcrWordRepository.class, RajshekharBasuMahabharatBanglaCorrectedWordRepository.class, BookRepository.class,
-		PageImageRepository.class, UserDetailsRepository.class);
+	List<Class<?>> staticJpaRepoClasses = Arrays.asList(BookRepository.class, PageImageRepository.class, UserDetailsRepository.class);
 
-	jpaRepos.forEach(jpaRepo -> {
-	    BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(JpaRepositoryFactoryBean.class).addConstructorArgValue(jpaRepo);
-	    ((DefaultListableBeanFactory) beanFactory).registerBeanDefinition(jpaRepo.getSimpleName(), beanDefinitionBuilder.getBeanDefinition());
+	DefaultListableBeanFactory defaultListableBeanFactory = (DefaultListableBeanFactory) beanFactory;
+
+	staticJpaRepoClasses.forEach(jpaRepositoryClass -> {
+	    registerJpaRepositoryFactoryBean(jpaRepositoryClass, defaultListableBeanFactory);
+	});
+
+	List<EntityClassDetails> dynamicJpaRepoClasses;
+	try {
+	    dynamicJpaRepoClasses = createEntitiesAndRepos(beanFactory.getBean(ConfigurableEnvironment.class));
+	} catch (SQLException | IOException e) {
+	    throw new RuntimeException(e);
+	}
+
+	dynamicJpaRepoClasses.forEach(entityClassDetails -> {
+	    Class<?> wordEntityRepo;
+	    try {
+		wordEntityRepo = Class.forName(entityClassDetails.getOcrWordEntityRepository());
+	    } catch (ClassNotFoundException e) {
+		throw new RuntimeException(e);
+	    }
+	    registerJpaRepositoryFactoryBean(wordEntityRepo, defaultListableBeanFactory);
+	    Class<?> correctedEntityRepo;
+	    try {
+		correctedEntityRepo = Class.forName(entityClassDetails.getCorrectedWordEntityRepository());
+	    } catch (ClassNotFoundException e) {
+		throw new RuntimeException(e);
+	    }
+	    registerJpaRepositoryFactoryBean(correctedEntityRepo, defaultListableBeanFactory);
 	});
 
     }
 
     @VisibleForTesting
     Optional<URI> getJarFilePath(URL url) {
-
-	GenericBeanDefinition bd = new GenericBeanDefinition();
 
 	if (url.getProtocol().equals("file")) {
 	    return Optional.empty();
@@ -99,6 +121,11 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
 	}
 
 	return Optional.of(URI.create(url.toString().split(".jar!")[0] + ".jar"));
+    }
+
+    private void registerJpaRepositoryFactoryBean(Class<?> jpaRepositoryClass, DefaultListableBeanFactory defaultListableBeanFactory) {
+	BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(JpaRepositoryFactoryBean.class).addConstructorArgValue(jpaRepositoryClass);
+	defaultListableBeanFactory.registerBeanDefinition(jpaRepositoryClass.getSimpleName(), beanDefinitionBuilder.getBeanDefinition());
     }
 
     private List<EntityClassDetails> createEntitiesAndRepos(ConfigurableEnvironment environment) throws SQLException, IOException {
@@ -117,7 +144,7 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
 	while (res.next()) {
 	    String baseTableName = res.getString("base_table_name");
 	    if (!StringUtils.hasText(baseTableName)) {
-		System.err.println("Dynamic JPA Repo cannot be created as the *base_table_name* is empty");
+		LOG.error("Dynamic JPA Repo cannot be created as the *base_table_name* is empty");
 		continue;
 	    }
 	    EntityClassDetails entityClassDetails = new EntityClassUtil().getEntityClassDetails(baseTableName);
@@ -265,10 +292,9 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
 
 	Loaded<?> loadedClass = unloadedClass.load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION);
 
-	// File baseLocation = new
-	// File(environment.getProperty("app.config.dynamic-jpa-write-directory"));
+	File baseLocation = new File(environment.getProperty("app.config.dynamic-jpa-write-directory"));
 
-	loadedClass.getLoaded();
+	loadedClass.saveIn(baseLocation);
 
     }
 
