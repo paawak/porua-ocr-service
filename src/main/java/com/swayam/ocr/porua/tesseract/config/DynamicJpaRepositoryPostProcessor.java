@@ -3,8 +3,6 @@ package com.swayam.ocr.porua.tesseract.config;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
-import java.net.URI;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -13,7 +11,6 @@ import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 import javax.persistence.Entity;
@@ -37,7 +34,6 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.annotations.VisibleForTesting;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
@@ -89,20 +85,6 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
 	    registerJpaRepositoryFactoryBean(createClass.apply(entityClassDetails.getCorrectedWordEntityRepository()), defaultListableBeanFactory);
 	});
 
-    }
-
-    @VisibleForTesting
-    Optional<URI> getJarFilePath(URL url) {
-
-	if (url.getProtocol().equals("file")) {
-	    return Optional.empty();
-	}
-
-	if (!url.getProtocol().equals("jar")) {
-	    throw new IllegalArgumentException("Unsupported protocol: " + url.getProtocol());
-	}
-
-	return Optional.of(URI.create(url.toString().split(".jar!")[0] + ".jar"));
     }
 
     private void registerJpaRepositoryFactoryBean(Class<?> jpaRepositoryClass, DefaultListableBeanFactory defaultListableBeanFactory) {
