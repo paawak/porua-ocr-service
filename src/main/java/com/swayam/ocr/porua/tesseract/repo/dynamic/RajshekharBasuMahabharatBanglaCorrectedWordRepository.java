@@ -3,15 +3,13 @@ package com.swayam.ocr.porua.tesseract.repo.dynamic;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
 
 import com.swayam.ocr.porua.tesseract.model.UserDetails;
 import com.swayam.ocr.porua.tesseract.model.dynamic.RajshekharBasuMahabharatBanglaCorrectedWordEntity;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
 
-@Repository("com.swayam.ocr.porua.tesseract.repo.dynamic.RajshekharBasuMahabharatBanglaCorrectedWordRepository")
-public interface RajshekharBasuMahabharatBanglaCorrectedWordRepository extends
-	CrudRepository<RajshekharBasuMahabharatBanglaCorrectedWordEntity, Long>, CorrectedWordRepositoryTemplate {
+//@Repository // ("com.swayam.ocr.porua.tesseract.repo.dynamic.RajshekharBasuMahabharatBanglaCorrectedWordRepository")
+public interface RajshekharBasuMahabharatBanglaCorrectedWordRepository extends CrudRepository<RajshekharBasuMahabharatBanglaCorrectedWordEntity, Long>, CorrectedWordRepositoryTemplate {
 
     @Override
     @Modifying

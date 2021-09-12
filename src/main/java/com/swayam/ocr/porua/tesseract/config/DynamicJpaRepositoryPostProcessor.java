@@ -15,13 +15,12 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.Entity;
-import javax.persistence.EntityManager;
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -31,10 +30,20 @@ import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.VisibleForTesting;
+import com.swayam.ocr.porua.tesseract.model.Book;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
+import com.swayam.ocr.porua.tesseract.model.PageImage;
+import com.swayam.ocr.porua.tesseract.model.UserDetails;
+import com.swayam.ocr.porua.tesseract.model.dynamic.RajshekharBasuMahabharatBanglaCorrectedWordEntity;
+import com.swayam.ocr.porua.tesseract.model.dynamic.RajshekharBasuMahabharatBanglaOcrWordEntity;
+import com.swayam.ocr.porua.tesseract.repo.BookRepository;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepositoryTemplate;
+import com.swayam.ocr.porua.tesseract.repo.PageImageRepository;
+import com.swayam.ocr.porua.tesseract.repo.UserDetailsRepository;
+import com.swayam.ocr.porua.tesseract.repo.dynamic.RajshekharBasuMahabharatBanglaCorrectedWordRepository;
+import com.swayam.ocr.porua.tesseract.repo.dynamic.RajshekharBasuMahabharatBanglaOcrWordRepository;
 import com.swayam.ocr.porua.tesseract.service.EntityClassUtil;
 import com.swayam.ocr.porua.tesseract.service.EntityClassUtil.EntityClassDetails;
 
@@ -48,46 +57,99 @@ import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.matcher.ElementMatchers;
 
-//@Configuration
+@Configuration
 public class DynamicJpaRepositoryPostProcessor {
 
     private static final String OCR_WORD_TABLE_SUFFIX = "_ocr_word";
 
     private static final String CORRECTED_WORD_TABLE_SUFFIX = "_corrected_word";
 
-    private final List<EntityClassDetails> entityDetails;
+    // private final List<EntityClassDetails> entityDetails;
 
     public DynamicJpaRepositoryPostProcessor(ConfigurableEnvironment environment) {
 	System.out.println("Start creating dynamic JPA Repos...");
-	try {
-	    entityDetails = createEntitiesAndRepos(environment);
-	} catch (SQLException | IOException e) {
-	    throw new RuntimeException(e);
-	}
+	// try {
+	// entityDetails = createEntitiesAndRepos(environment);
+	// } catch (SQLException | IOException e) {
+	// throw new RuntimeException(e);
+	// }
     }
 
-    @Lazy
+    // @Bean
+    // public
+    // org.springframework.data.repository.Repository<RajshekharBasuMahabharatBanglaOcrWordEntity,
+    // Long> ocrWordRepo(EntityManager entityManager,
+    // ObjectProvider<EntityPathResolver> entityPathResolver) {
+    // JpaRepositoryFactoryBean<RajshekharBasuMahabharatBanglaOcrWordRepository,
+    // RajshekharBasuMahabharatBanglaOcrWordEntity, Long>
+    // jpaRepositoryFactoryBean =
+    // new
+    // JpaRepositoryFactoryBean<>(RajshekharBasuMahabharatBanglaOcrWordRepository.class);
+    // jpaRepositoryFactoryBean.setEntityManager(entityManager);
+    // jpaRepositoryFactoryBean.setEntityPathResolver(entityPathResolver);
+    // jpaRepositoryFactoryBean.afterPropertiesSet();
+    // return jpaRepositoryFactoryBean.getObject();
+    //
+    // }
+
     @Bean
-    public org.springframework.data.repository.Repository ocrWordRepo(EntityManager entityManager) {
-	try {
-	    JpaRepositoryFactoryBean jpaRepositoryFactoryBean = new JpaRepositoryFactoryBean(Class.forName(entityDetails.get(0).getOcrWordEntityRepository()));
-	    jpaRepositoryFactoryBean.setEntityManager(entityManager);
-	    return jpaRepositoryFactoryBean.getObject();
-	} catch (ClassNotFoundException e) {
-	    throw new RuntimeException(e);
-	}
+    public JpaRepositoryFactoryBean<RajshekharBasuMahabharatBanglaOcrWordRepository, RajshekharBasuMahabharatBanglaOcrWordEntity, Long> ocrWordRepo() {
+	JpaRepositoryFactoryBean<RajshekharBasuMahabharatBanglaOcrWordRepository, RajshekharBasuMahabharatBanglaOcrWordEntity, Long> jpaRepositoryFactoryBean =
+		new JpaRepositoryFactoryBean<>(RajshekharBasuMahabharatBanglaOcrWordRepository.class);
+	// jpaRepositoryFactoryBean.setEntityManager(entityManager);
+	// jpaRepositoryFactoryBean.setEntityPathResolver(entityPathResolver);
+	return jpaRepositoryFactoryBean;
+
     }
 
-    @Lazy
     @Bean
-    public org.springframework.data.repository.Repository correctedWordRepo(EntityManager entityManager) {
-	try {
-	    JpaRepositoryFactoryBean jpaRepositoryFactoryBean = new JpaRepositoryFactoryBean(Class.forName(entityDetails.get(0).getCorrectedWordEntityRepository()));
-	    return jpaRepositoryFactoryBean.getObject();
-	} catch (ClassNotFoundException e) {
-	    throw new RuntimeException(e);
-	}
+    public JpaRepositoryFactoryBean<RajshekharBasuMahabharatBanglaCorrectedWordRepository, RajshekharBasuMahabharatBanglaCorrectedWordEntity, Long>
+	    rajshekharBasuMahabharatBanglaCorrectedWordRepository() {
+	JpaRepositoryFactoryBean<RajshekharBasuMahabharatBanglaCorrectedWordRepository, RajshekharBasuMahabharatBanglaCorrectedWordEntity, Long> jpaRepositoryFactoryBean =
+		new JpaRepositoryFactoryBean<>(RajshekharBasuMahabharatBanglaCorrectedWordRepository.class);
+	// jpaRepositoryFactoryBean.setEntityManager(entityManager);
+	// jpaRepositoryFactoryBean.setEntityPathResolver(entityPathResolver);
+	return jpaRepositoryFactoryBean;
+
     }
+
+    @Bean
+    public JpaRepositoryFactoryBean<BookRepository, Book, Long> bookRepository() {
+	JpaRepositoryFactoryBean<BookRepository, Book, Long> jpaRepositoryFactoryBean = new JpaRepositoryFactoryBean<>(BookRepository.class);
+	// jpaRepositoryFactoryBean.setEntityManager(entityManager);
+	// jpaRepositoryFactoryBean.setEntityPathResolver(entityPathResolver);
+	return jpaRepositoryFactoryBean;
+
+    }
+
+    @Bean
+    public JpaRepositoryFactoryBean<PageImageRepository, PageImage, Long> pageImageRepository() {
+	JpaRepositoryFactoryBean<PageImageRepository, PageImage, Long> jpaRepositoryFactoryBean = new JpaRepositoryFactoryBean<>(PageImageRepository.class);
+	// jpaRepositoryFactoryBean.setEntityManager(entityManager);
+	// jpaRepositoryFactoryBean.setEntityPathResolver(entityPathResolver);
+	return jpaRepositoryFactoryBean;
+
+    }
+
+    @Bean
+    public JpaRepositoryFactoryBean<UserDetailsRepository, UserDetails, Long> userDetailsRepository() {
+	JpaRepositoryFactoryBean<UserDetailsRepository, UserDetails, Long> jpaRepositoryFactoryBean = new JpaRepositoryFactoryBean<>(UserDetailsRepository.class);
+	// jpaRepositoryFactoryBean.setEntityManager(entityManager);
+	// jpaRepositoryFactoryBean.setEntityPathResolver(entityPathResolver);
+	return jpaRepositoryFactoryBean;
+
+    }
+
+    // @Bean
+    // public org.springframework.data.repository.Repository
+    // correctedWordRepo(EntityManager entityManager) {
+    // JpaRepositoryFactoryBean jpaRepositoryFactoryBean = new
+    // JpaRepositoryFactoryBean(RajshekharBasuMahabharatBanglaCorrectedWordRepository.class);
+    // jpaRepositoryFactoryBean.setEntityManager(entityManager);
+    // jpaRepositoryFactoryBean.afterPropertiesSet();
+    // return jpaRepositoryFactoryBean.getObject();
+    //
+    // }
 
     @VisibleForTesting
     Optional<URI> getJarFilePath(URL url) {
@@ -150,8 +212,8 @@ public class DynamicJpaRepositoryPostProcessor {
     /**
      * Creates an instance of {@link CorrectedWordEntityTemplate} dynamically.
      * The generated class looks like
-     * {@link RajshekharBasuMahabharatBanglaCorrectedWordEntity} in the <em>test</em>
-     * folder.
+     * {@link RajshekharBasuMahabharatBanglaCorrectedWordEntity} in the
+     * <em>test</em> folder.
      */
     private void createCorrectedWordEntity(String baseTableName, String entityClassName, ConfigurableEnvironment environment) throws IOException {
 
@@ -171,8 +233,9 @@ public class DynamicJpaRepositoryPostProcessor {
 
     /**
      * Creates an instance of {@link OcrWordEntityTemplate} dynamically. The
-     * generated class looks like {@link RajshekharBasuMahabharatBanglaOcrWordEntity} in
-     * the <em>test</em> folder.
+     * generated class looks like
+     * {@link RajshekharBasuMahabharatBanglaOcrWordEntity} in the <em>test</em>
+     * folder.
      */
     private void createOcrWordEntity(String baseTableName, String entityClassName, String correctedWordEntity, ConfigurableEnvironment environment) throws IOException, ClassNotFoundException {
 
@@ -207,8 +270,8 @@ public class DynamicJpaRepositoryPostProcessor {
     /**
      * Creates a child interface of {@link OcrWordRepositoryTemplate}
      * dynamically. The generated class looks like
-     * {@link RajshekharBasuMahabharatBanglaOcrWordRepository} in the <em>test</em>
-     * folder.
+     * {@link RajshekharBasuMahabharatBanglaOcrWordRepository} in the
+     * <em>test</em> folder.
      */
     private void createOcrWordRepository(String repositoryClassName, String entityClassName, ConfigurableEnvironment environment) throws IOException, ClassNotFoundException {
 	if (classFileExists(repositoryClassName)) {
@@ -226,8 +289,8 @@ public class DynamicJpaRepositoryPostProcessor {
     /**
      * Creates a child interface of {@link CorrectedWordRepositoryTemplate}
      * dynamically. The generated class looks like
-     * {@link RajshekharBasuMahabharatBanglaCorrectedWordRepository} in the <em>test</em>
-     * folder.
+     * {@link RajshekharBasuMahabharatBanglaCorrectedWordRepository} in the
+     * <em>test</em> folder.
      */
     private void createCorrectedWordRepository(String repositoryClassName, String entityClassName, ConfigurableEnvironment environment) throws IOException, ClassNotFoundException {
 	if (classFileExists(repositoryClassName)) {
