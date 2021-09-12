@@ -114,12 +114,12 @@ public class OcrWordServiceImpl implements OcrWordService {
 
     private OcrWordRepositoryTemplate getOcrWordRepositoryTemplate(long bookId) {
 	EntityClassDetails entityClassDetails = getEntityClassDetails(bookId);
-	return applicationContext.getBean(OcrWordRepositoryTemplate.class);
+	return applicationContext.getBean(entityClassDetails.getOcrWordEntityRepository(), OcrWordRepositoryTemplate.class);
     }
 
     private CorrectedWordRepositoryTemplate getCorrectedWordRepositoryTemplate(long bookId) {
 	EntityClassDetails entityClassDetails = getEntityClassDetails(bookId);
-	return applicationContext.getBean(CorrectedWordRepositoryTemplate.class);
+	return applicationContext.getBean(entityClassDetails.getCorrectedWordEntityRepository(), CorrectedWordRepositoryTemplate.class);
     }
 
     private EntityClassDetails getEntityClassDetails(long bookId) {

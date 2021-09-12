@@ -12,9 +12,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -40,11 +40,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.VisibleForTesting;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
-import com.swayam.ocr.porua.tesseract.repo.BookRepository;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
 import com.swayam.ocr.porua.tesseract.repo.OcrWordRepositoryTemplate;
-import com.swayam.ocr.porua.tesseract.repo.PageImageRepository;
-import com.swayam.ocr.porua.tesseract.repo.UserDetailsRepository;
 import com.swayam.ocr.porua.tesseract.service.EntityClassUtil;
 import com.swayam.ocr.porua.tesseract.service.EntityClassUtil.EntityClassDetails;
 
@@ -67,21 +64,18 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
 
     private static final String CORRECTED_WORD_TABLE_SUFFIX = "_corrected_word";
 
-    // public DynamicJpaRepositoryPostProcessor(ConfigurableEnvironment
-    // environment) {
-    // this.environment = environment;
-    // LOG.info("Start creating dynamic JPA Repos...");
-    // }
-
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-	List<Class<?>> staticJpaRepoClasses = Arrays.asList(BookRepository.class, PageImageRepository.class, UserDetailsRepository.class);
 
 	DefaultListableBeanFactory defaultListableBeanFactory = (DefaultListableBeanFactory) beanFactory;
 
-	staticJpaRepoClasses.forEach(jpaRepositoryClass -> {
-	    registerJpaRepositoryFactoryBean(jpaRepositoryClass, defaultListableBeanFactory);
-	});
+	Function<String, Class<?>> createClass = className -> {
+	    try {
+		return Class.forName(className);
+	    } catch (ClassNotFoundException e) {
+		throw new RuntimeException(e);
+	    }
+	};
 
 	List<EntityClassDetails> dynamicJpaRepoClasses;
 	try {
@@ -91,20 +85,8 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
 	}
 
 	dynamicJpaRepoClasses.forEach(entityClassDetails -> {
-	    Class<?> wordEntityRepo;
-	    try {
-		wordEntityRepo = Class.forName(entityClassDetails.getOcrWordEntityRepository());
-	    } catch (ClassNotFoundException e) {
-		throw new RuntimeException(e);
-	    }
-	    registerJpaRepositoryFactoryBean(wordEntityRepo, defaultListableBeanFactory);
-	    Class<?> correctedEntityRepo;
-	    try {
-		correctedEntityRepo = Class.forName(entityClassDetails.getCorrectedWordEntityRepository());
-	    } catch (ClassNotFoundException e) {
-		throw new RuntimeException(e);
-	    }
-	    registerJpaRepositoryFactoryBean(correctedEntityRepo, defaultListableBeanFactory);
+	    registerJpaRepositoryFactoryBean(createClass.apply(entityClassDetails.getOcrWordEntityRepository()), defaultListableBeanFactory);
+	    registerJpaRepositoryFactoryBean(createClass.apply(entityClassDetails.getCorrectedWordEntityRepository()), defaultListableBeanFactory);
 	});
 
     }
@@ -125,7 +107,7 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
 
     private void registerJpaRepositoryFactoryBean(Class<?> jpaRepositoryClass, DefaultListableBeanFactory defaultListableBeanFactory) {
 	BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(JpaRepositoryFactoryBean.class).addConstructorArgValue(jpaRepositoryClass);
-	defaultListableBeanFactory.registerBeanDefinition(jpaRepositoryClass.getSimpleName(), beanDefinitionBuilder.getBeanDefinition());
+	defaultListableBeanFactory.registerBeanDefinition(jpaRepositoryClass.getName(), beanDefinitionBuilder.getBeanDefinition());
     }
 
     private List<EntityClassDetails> createEntitiesAndRepos(ConfigurableEnvironment environment) throws SQLException, IOException {
