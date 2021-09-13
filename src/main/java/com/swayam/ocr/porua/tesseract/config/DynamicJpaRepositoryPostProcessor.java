@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -106,10 +107,12 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
 	String dbPassword = environment.getProperty("spring.datasource.password");
 	Connection con = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
 	PreparedStatement pStat;
+	String tableName = "base_table_name";
 	try {
-	    pStat = con.prepareStatement("SELECT base_table_name FROM book");
+	    pStat = con.prepareStatement("SELECT " + tableName + " FROM book");
 	} catch (SQLSyntaxErrorException e) {
-	    throw new RuntimeException(e);
+	    LOG.error("Error querying table " + tableName + ", returning empty dynamic JPARepos", e);
+	    return Collections.emptyList();
 	}
 	ResultSet res = pStat.executeQuery();
 	List<EntityClassDetails> entityDetails = new ArrayList<>();
