@@ -26,6 +26,8 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -51,6 +53,7 @@ import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.matcher.ElementMatchers;
 
+@Order(Ordered.LOWEST_PRECEDENCE)
 @Configuration
 public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcessor {
 
@@ -140,8 +143,8 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
     /**
      * Creates an instance of {@link CorrectedWordEntityTemplate} dynamically.
      * The generated class looks like
-     * {@link RajshekharBasuMahabharatBanglaCorrectedWordEntity} in the
-     * <em>test</em> folder.
+     * {@link DummyAuthorDummyBookCorrectedWordEntity} in the <em>test</em>
+     * folder.
      */
     private void createCorrectedWordEntity(String baseTableName, String entityClassName, ConfigurableEnvironment environment) throws IOException {
 
@@ -161,9 +164,8 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
 
     /**
      * Creates an instance of {@link OcrWordEntityTemplate} dynamically. The
-     * generated class looks like
-     * {@link RajshekharBasuMahabharatBanglaOcrWordEntity} in the <em>test</em>
-     * folder.
+     * generated class looks like {@link DummyAuthorDummyBookOcrWordEntity} in
+     * the <em>test</em> folder.
      */
     private void createOcrWordEntity(String baseTableName, String entityClassName, String correctedWordEntity, ConfigurableEnvironment environment) throws IOException, ClassNotFoundException {
 
@@ -198,8 +200,8 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
     /**
      * Creates a child interface of {@link OcrWordRepositoryTemplate}
      * dynamically. The generated class looks like
-     * {@link RajshekharBasuMahabharatBanglaOcrWordRepository} in the
-     * <em>test</em> folder.
+     * {@link DummyAuthorDummyBookOcrWordRepository} in the <em>test</em>
+     * folder.
      */
     private void createOcrWordRepository(String repositoryClassName, String entityClassName, ConfigurableEnvironment environment) throws IOException, ClassNotFoundException {
 	if (classFileExists(repositoryClassName)) {
@@ -217,8 +219,8 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
     /**
      * Creates a child interface of {@link CorrectedWordRepositoryTemplate}
      * dynamically. The generated class looks like
-     * {@link RajshekharBasuMahabharatBanglaCorrectedWordRepository} in the
-     * <em>test</em> folder.
+     * {@link DummyAuthorDummyBookCorrectedWordRepository} in the <em>test</em>
+     * folder.
      */
     private void createCorrectedWordRepository(String repositoryClassName, String entityClassName, ConfigurableEnvironment environment) throws IOException, ClassNotFoundException {
 	if (classFileExists(repositoryClassName)) {
@@ -240,7 +242,7 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
     }
 
     private AnnotationDescription getRepositoryAnnotation(String repositoryClassName) {
-	return AnnotationDescription.Builder.ofType(org.springframework.stereotype.Repository.class).build();
+	return AnnotationDescription.Builder.ofType(org.springframework.stereotype.Repository.class).define("value", repositoryClassName).build();
     }
 
     private boolean classFileExists(String className) {
