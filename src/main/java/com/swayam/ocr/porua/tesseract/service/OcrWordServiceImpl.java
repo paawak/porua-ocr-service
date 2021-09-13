@@ -37,31 +37,26 @@ public class OcrWordServiceImpl implements OcrWordService {
 
     @Override
     public int getWordCount(long bookId, long pageImageId) {
-	return getOcrWordRepositoryTemplate(bookId).countByOcrWordIdBookIdAndOcrWordIdPageImageId(bookId,
-		pageImageId);
+	return getOcrWordRepositoryTemplate(bookId).countByOcrWordIdBookIdAndOcrWordIdPageImageId(bookId, pageImageId);
     }
 
     @Override
     public Collection<OcrWordOutputDto> getWords(long bookId, long pageImageId, UserDetails userDetails) {
-	Collection<OcrWord> entities = getOcrWordRepositoryTemplate(bookId)
-		.findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId,
-			pageImageId);
+	Collection<OcrWord> entities = getOcrWordRepositoryTemplate(bookId).findByOcrWordIdBookIdAndOcrWordIdPageImageIdOrderByOcrWordIdWordSequenceId(bookId, pageImageId);
 	return entities.stream().map(entity -> {
 	    OcrWordOutputDto dto = new OcrWordOutputDto();
 	    BeanUtils.copyProperties(entity, dto);
 	    List<? extends CorrectedWord> correctedWords = entity.getCorrectedWords();
 	    if (correctedWords.size() > 0) {
 
-		boolean isIgnored = correctedWords.stream()
-			.filter(correctedWord -> (correctedWord.getUser().getRole() == UserRole.ADMIN_ROLE)
-				|| (correctedWord.getUser().getId() == userDetails.getId()))
-			.anyMatch(CorrectedWord::isIgnored);
+		boolean isIgnored =
+			correctedWords.stream().filter(correctedWord -> (correctedWord.getUser().getRole() == UserRole.ADMIN_ROLE) || (correctedWord.getUser().getId() == userDetails.getId()))
+				.anyMatch(CorrectedWord::isIgnored);
 
 		if (isIgnored) {
 		    dto.setIgnored(true);
 		} else {
-		    Optional<? extends CorrectedWord> correctedWordWithText = correctedWords.stream()
-			    .filter(correctedWord -> correctedWord.getCorrectedText() != null).findFirst();
+		    Optional<? extends CorrectedWord> correctedWordWithText = correctedWords.stream().filter(correctedWord -> correctedWord.getCorrectedText() != null).findFirst();
 		    if (correctedWordWithText.isPresent()) {
 			dto.setCorrectedText(correctedWordWithText.get().getCorrectedText());
 		    }
@@ -82,10 +77,8 @@ public class OcrWordServiceImpl implements OcrWordService {
     public int markWordAsIgnored(OcrWordId ocrWordId, UserDetails user) {
 	OcrWord ocrWord = getWord(ocrWordId);
 
-	CorrectedWordRepositoryTemplate correctedWordRepositoryTemplate =
-		getCorrectedWordRepositoryTemplate(ocrWordId.getBookId());
-	Optional<CorrectedWord> existingCorrection =
-		correctedWordRepositoryTemplate.findByOcrWordIdAndUser(ocrWord.getId(), user);
+	CorrectedWordRepositoryTemplate correctedWordRepositoryTemplate = getCorrectedWordRepositoryTemplate(ocrWordId.getBookId());
+	Optional<CorrectedWord> existingCorrection = correctedWordRepositoryTemplate.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
 	if (existingCorrection.isPresent()) {
 	    return correctedWordRepositoryTemplate.markAsIgnored(ocrWord.getId(), user);
@@ -107,10 +100,8 @@ public class OcrWordServiceImpl implements OcrWordService {
 
 	OcrWord ocrWord = getWord(ocrWordId);
 
-	CorrectedWordRepositoryTemplate correctedWordRepositoryTemplate =
-		getCorrectedWordRepositoryTemplate(ocrWordId.getBookId());
-	Optional<CorrectedWord> existingCorrection =
-		correctedWordRepositoryTemplate.findByOcrWordIdAndUser(ocrWord.getId(), user);
+	CorrectedWordRepositoryTemplate correctedWordRepositoryTemplate = getCorrectedWordRepositoryTemplate(ocrWordId.getBookId());
+	Optional<CorrectedWord> existingCorrection = correctedWordRepositoryTemplate.findByOcrWordIdAndUser(ocrWord.getId(), user);
 
 	if (existingCorrection.isPresent()) {
 	    return correctedWordRepositoryTemplate.updateCorrectedText(ocrWord.getId(), correctedText, user);
@@ -123,14 +114,12 @@ public class OcrWordServiceImpl implements OcrWordService {
 
     private OcrWordRepositoryTemplate getOcrWordRepositoryTemplate(long bookId) {
 	EntityClassDetails entityClassDetails = getEntityClassDetails(bookId);
-	return applicationContext.getBean(entityClassDetails.getOcrWordEntityRepository(),
-		OcrWordRepositoryTemplate.class);
+	return applicationContext.getBean(entityClassDetails.getOcrWordEntityRepository(), OcrWordRepositoryTemplate.class);
     }
 
     private CorrectedWordRepositoryTemplate getCorrectedWordRepositoryTemplate(long bookId) {
 	EntityClassDetails entityClassDetails = getEntityClassDetails(bookId);
-	return applicationContext.getBean(entityClassDetails.getCorrectedWordEntityRepository(),
-		CorrectedWordRepositoryTemplate.class);
+	return applicationContext.getBean(entityClassDetails.getCorrectedWordEntityRepository(), CorrectedWordRepositoryTemplate.class);
     }
 
     private EntityClassDetails getEntityClassDetails(long bookId) {
@@ -142,11 +131,8 @@ public class OcrWordServiceImpl implements OcrWordService {
 	EntityClassDetails entityClassDetails = getEntityClassDetails(ocrWord.getOcrWordId().getBookId());
 	OcrWord entity;
 	try {
-	    entity = (OcrWord) Class.forName(entityClassDetails.getOcrWordEntity()).getDeclaredConstructor()
-		    .newInstance();
-	} catch (InstantiationException | IllegalAccessException | ClassNotFoundException
-		| IllegalArgumentException | InvocationTargetException | NoSuchMethodException
-		| SecurityException e) {
+	    entity = (OcrWord) Class.forName(entityClassDetails.getOcrWordEntity()).getDeclaredConstructor().newInstance();
+	} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 	    throw new RuntimeException(e);
 	}
 	BeanUtils.copyProperties(ocrWord, entity);
@@ -166,11 +152,8 @@ public class OcrWordServiceImpl implements OcrWordService {
 	correctedWord.setUser(user);
 	CorrectedWord entity;
 	try {
-	    entity = (CorrectedWord) Class.forName(entityClassDetails.getCorrectedWordEntity())
-		    .getDeclaredConstructor().newInstance();
-	} catch (InstantiationException | IllegalAccessException | ClassNotFoundException
-		| IllegalArgumentException | InvocationTargetException | NoSuchMethodException
-		| SecurityException e) {
+	    entity = (CorrectedWord) Class.forName(entityClassDetails.getCorrectedWordEntity()).getDeclaredConstructor().newInstance();
+	} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 	    throw new RuntimeException(e);
 	}
 	BeanUtils.copyProperties(correctedWord, entity);

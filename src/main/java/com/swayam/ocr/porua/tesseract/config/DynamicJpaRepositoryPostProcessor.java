@@ -3,35 +3,40 @@ package com.swayam.ocr.porua.tesseract.config;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
-import java.net.URI;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.function.Function;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.annotations.VisibleForTesting;
 import com.swayam.ocr.porua.tesseract.model.CorrectedWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.model.OcrWordEntityTemplate;
 import com.swayam.ocr.porua.tesseract.repo.CorrectedWordRepositoryTemplate;
@@ -50,53 +55,71 @@ import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.matcher.ElementMatchers;
 
 @Order(Ordered.LOWEST_PRECEDENCE)
-public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcessor {
+@Configuration
+public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcessor {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DynamicJpaRepositoryPostProcessor.class);
 
     private static final String OCR_WORD_TABLE_SUFFIX = "_ocr_word";
 
     private static final String CORRECTED_WORD_TABLE_SUFFIX = "_corrected_word";
 
     @Override
-    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-	System.out.println("Start creating dynamic JPA Repos...");
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+
+	DefaultListableBeanFactory defaultListableBeanFactory = (DefaultListableBeanFactory) beanFactory;
+
+	Function<String, Class<?>> createClass = className -> {
+	    try {
+		return Class.forName(className);
+	    } catch (ClassNotFoundException e) {
+		throw new RuntimeException(e);
+	    }
+	};
+
+	List<EntityClassDetails> dynamicJpaRepoClasses;
 	try {
-	    createEntitiesAndRepos(environment);
+	    dynamicJpaRepoClasses = createEntitiesAndRepos(beanFactory.getBean(ConfigurableEnvironment.class));
 	} catch (SQLException | IOException e) {
 	    throw new RuntimeException(e);
 	}
+
+	dynamicJpaRepoClasses.stream().forEach(entityClassDetails -> {
+	    registerJpaRepositoryFactoryBean(createClass.apply(entityClassDetails.getOcrWordEntityRepository()), defaultListableBeanFactory);
+	    registerJpaRepositoryFactoryBean(createClass.apply(entityClassDetails.getCorrectedWordEntityRepository()), defaultListableBeanFactory);
+	});
+
     }
 
-    @VisibleForTesting
-    Optional<URI> getJarFilePath(URL url) {
-	if (url.getProtocol().equals("file")) {
-	    return Optional.empty();
+    private void registerJpaRepositoryFactoryBean(Class<?> jpaRepositoryClass, DefaultListableBeanFactory defaultListableBeanFactory) {
+	String beanName = jpaRepositoryClass.getName();
+	if (defaultListableBeanFactory.containsBean(beanName)) {
+	    LOG.warn("A bean with name {} already exists, skipping creating JPAFactoryBean dynamically", beanName);
+	    return;
 	}
-
-	if (!url.getProtocol().equals("jar")) {
-	    throw new IllegalArgumentException("Unsupported protocol: " + url.getProtocol());
-	}
-
-	return Optional.of(URI.create(url.toString().split(".jar!")[0] + ".jar"));
+	BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(JpaRepositoryFactoryBean.class).addConstructorArgValue(jpaRepositoryClass);
+	defaultListableBeanFactory.registerBeanDefinition(beanName, beanDefinitionBuilder.getBeanDefinition());
     }
 
-    private void createEntitiesAndRepos(ConfigurableEnvironment environment) throws SQLException, IOException {
+    private List<EntityClassDetails> createEntitiesAndRepos(ConfigurableEnvironment environment) throws SQLException, IOException {
 	String dbUrl = environment.getProperty("spring.datasource.url");
 	String dbUser = environment.getProperty("spring.datasource.username");
 	String dbPassword = environment.getProperty("spring.datasource.password");
 	Connection con = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
 	PreparedStatement pStat;
+	String tableName = "base_table_name";
 	try {
-	    pStat = con.prepareStatement("SELECT base_table_name FROM book");
+	    pStat = con.prepareStatement("SELECT " + tableName + " FROM book");
 	} catch (SQLSyntaxErrorException e) {
-	    System.err.println("Could not create dynamic JPA Repos: " + e.getMessage());
-	    e.printStackTrace();
-	    return;
+	    LOG.error("Error querying table " + tableName + ", returning empty dynamic JPARepos", e);
+	    return Collections.emptyList();
 	}
 	ResultSet res = pStat.executeQuery();
+	List<EntityClassDetails> entityDetails = new ArrayList<>();
 	while (res.next()) {
 	    String baseTableName = res.getString("base_table_name");
 	    if (!StringUtils.hasText(baseTableName)) {
-		System.err.println("Dynamic JPA Repo cannot be created as the *base_table_name* is empty");
+		LOG.error("Dynamic JPA Repo cannot be created as the *base_table_name* is empty");
 		continue;
 	    }
 	    EntityClassDetails entityClassDetails = new EntityClassUtil().getEntityClassDetails(baseTableName);
@@ -118,7 +141,11 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
 		throw new RuntimeException(e);
 	    }
 
+	    entityDetails.add(entityClassDetails);
+
 	}
+
+	return entityDetails;
     }
 
     /**
@@ -130,11 +157,11 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     private void createCorrectedWordEntity(String baseTableName, String entityClassName, ConfigurableEnvironment environment) throws IOException {
 
 	if (classFileExists(entityClassName)) {
-	    System.out.println("The class " + entityClassName + " already exists, not creating a new one");
+	    LOG.info("The class " + entityClassName + " already exists, not creating a new one");
 	    return;
 	}
 
-	System.out.println("Creating new class: " + entityClassName);
+	LOG.info("Creating new class: " + entityClassName);
 
 	Unloaded<?> generatedClass = new ByteBuddy().subclass(CorrectedWordEntityTemplate.class).annotateType(getEntityAnnotation(), getTableAnnotation(baseTableName + CORRECTED_WORD_TABLE_SUFFIX))
 		.name(entityClassName).make();
@@ -151,11 +178,11 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     private void createOcrWordEntity(String baseTableName, String entityClassName, String correctedWordEntity, ConfigurableEnvironment environment) throws IOException, ClassNotFoundException {
 
 	if (classFileExists(entityClassName)) {
-	    System.out.println("The class " + entityClassName + " already exists, not creating a new one");
+	    LOG.info("The class " + entityClassName + " already exists, not creating a new one");
 	    return;
 	}
 
-	System.out.println("Creating new class: " + entityClassName);
+	LOG.info("Creating new class: " + entityClassName);
 
 	Class<?> correctedEntityClass = Class.forName(correctedWordEntity);
 
@@ -223,7 +250,7 @@ public class DynamicJpaRepositoryPostProcessor implements EnvironmentPostProcess
     }
 
     private AnnotationDescription getRepositoryAnnotation(String repositoryClassName) {
-	return AnnotationDescription.Builder.ofType(Repository.class).define("value", repositoryClassName).build();
+	return AnnotationDescription.Builder.ofType(org.springframework.stereotype.Repository.class).define("value", repositoryClassName).build();
     }
 
     private boolean classFileExists(String className) {
