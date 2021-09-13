@@ -83,7 +83,7 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
 	    throw new RuntimeException(e);
 	}
 
-	dynamicJpaRepoClasses.forEach(entityClassDetails -> {
+	dynamicJpaRepoClasses.stream().forEach(entityClassDetails -> {
 	    registerJpaRepositoryFactoryBean(createClass.apply(entityClassDetails.getOcrWordEntityRepository()), defaultListableBeanFactory);
 	    registerJpaRepositoryFactoryBean(createClass.apply(entityClassDetails.getCorrectedWordEntityRepository()), defaultListableBeanFactory);
 	});
@@ -91,8 +91,13 @@ public class DynamicJpaRepositoryPostProcessor implements BeanFactoryPostProcess
     }
 
     private void registerJpaRepositoryFactoryBean(Class<?> jpaRepositoryClass, DefaultListableBeanFactory defaultListableBeanFactory) {
+	String beanName = jpaRepositoryClass.getName();
+	if (defaultListableBeanFactory.containsBean(beanName)) {
+	    LOG.warn("A bean with name {} already exists, skipping creating JPAFactoryBean dynamically", beanName);
+	    return;
+	}
 	BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(JpaRepositoryFactoryBean.class).addConstructorArgValue(jpaRepositoryClass);
-	defaultListableBeanFactory.registerBeanDefinition(jpaRepositoryClass.getName(), beanDefinitionBuilder.getBeanDefinition());
+	defaultListableBeanFactory.registerBeanDefinition(beanName, beanDefinitionBuilder.getBeanDefinition());
     }
 
     private List<EntityClassDetails> createEntitiesAndRepos(ConfigurableEnvironment environment) throws SQLException, IOException {
